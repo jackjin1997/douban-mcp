@@ -1,6 +1,7 @@
 import axios from "axios";
 import { Movie, SearchResult, RecommendationRequest } from "../types";
 import * as dotenv from "dotenv";
+import { logger } from "../utils/logger";
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ export class DoubanService {
   // 获取电影详情
   async getMovieById(id: string): Promise<Movie> {
     try {
+      logger.info(`获取电影详情服务，ID: ${id}`);
       // 注意：由于豆瓣API限制，这里使用模拟数据
       // 在实际应用中，应该使用：
       // const response = await doubanApi.get(`/movie/subject/${id}`);
@@ -29,9 +31,11 @@ export class DoubanService {
       await new Promise((resolve) => setTimeout(resolve, 300));
 
       // 返回模拟数据
-      return this.getMockMovieById(id);
+      const movie = this.getMockMovieById(id);
+      logger.debug(`获取电影详情成功: ${movie.title}`);
+      return movie;
     } catch (error) {
-      console.error("获取电影详情失败:", error);
+      logger.error("获取电影详情失败", error);
       throw new Error("获取电影详情失败");
     }
   }
@@ -43,6 +47,9 @@ export class DoubanService {
     count: number = 20
   ): Promise<SearchResult> {
     try {
+      logger.info(
+        `搜索电影服务，关键词: ${query}, 起始位置: ${start}, 数量: ${count}`
+      );
       // 注意：由于豆瓣API限制，这里使用模拟数据
       // 在实际应用中，应该使用：
       // const response = await doubanApi.get('/movie/search', {
@@ -54,9 +61,11 @@ export class DoubanService {
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       // 返回模拟数据
-      return this.getMockSearchResults(query, start, count);
+      const results = this.getMockSearchResults(query, start, count);
+      logger.debug(`搜索电影成功，共 ${results.subjects.length} 条结果`);
+      return results;
     } catch (error) {
-      console.error("搜索电影失败:", error);
+      logger.error("搜索电影失败", error);
       throw new Error("搜索电影失败");
     }
   }
@@ -64,14 +73,17 @@ export class DoubanService {
   // 获取推荐电影
   async getRecommendations(params: RecommendationRequest): Promise<Movie[]> {
     try {
+      logger.info("获取电影推荐服务", params);
       // 注意：由于豆瓣API限制，这里使用模拟数据
       // 模拟API调用延迟
       await new Promise((resolve) => setTimeout(resolve, 800));
 
       // 返回模拟数据
-      return this.getMockRecommendations(params);
+      const recommendations = this.getMockRecommendations(params);
+      logger.debug(`获取电影推荐成功，共 ${recommendations.length} 部电影`);
+      return recommendations;
     } catch (error) {
-      console.error("获取电影推荐失败:", error);
+      logger.error("获取电影推荐失败", error);
       throw new Error("获取电影推荐失败");
     }
   }

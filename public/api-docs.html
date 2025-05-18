@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>豆瓣电影MCP API文档</title>
+  <style>
+    body {
+      font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #007722;
+      border-bottom: 2px solid #007722;
+      padding-bottom: 10px;
+    }
+    h2 {
+      color: #007722;
+      margin-top: 30px;
+    }
+    h3 {
+      margin-top: 25px;
+      color: #333;
+      background-color: #f5f5f5;
+      padding: 8px;
+      border-radius: 4px;
+    }
+    .endpoint {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      font-family: monospace;
+      margin: 10px 0;
+    }
+    .method {
+      font-weight: bold;
+      color: #0066cc;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f5f5f5;
+    }
+    code {
+      background-color: #f5f5f5;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-family: monospace;
+    }
+    pre {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    .response {
+      background-color: #f8f8f8;
+      border-left: 4px solid #007722;
+      padding: 10px;
+      margin: 10px 0;
+    }
+    .nav {
+      position: sticky;
+      top: 0;
+      background-color: #fff;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+      margin-bottom: 20px;
+    }
+    .nav a {
+      margin-right: 15px;
+      color: #007722;
+      text-decoration: none;
+    }
+    .nav a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="nav">
+    <a href="#overview">概述</a>
+    <a href="#movie">电影详情</a>
+    <a href="#search">搜索电影</a>
+    <a href="#recommend">电影推荐</a>
+    <a href="#models">数据模型</a>
+  </div>
+
+  <h1 id="overview">豆瓣电影MCP API文档</h1>
+  
+  <p>豆瓣电影MCP (Model Control Panel) 是一个专为大型语言模型设计的服务，提供电影信息和推荐功能。</p>
+  
+  <h2>基本信息</h2>
+  <ul>
+    <li><strong>基础URL</strong>: <code>http://localhost:3000/api</code></li>
+    <li><strong>返回格式</strong>: 所有API均返回JSON格式数据</li>
+    <li><strong>标准响应结构</strong>:
+      <pre>
+{
+  "code": 200,          // 状态码
+  "message": "success", // 状态消息
+  "data": { ... }       // 响应数据
+}
+      </pre>
+    </li>
+  </ul>
+
+  <h2 id="movie">获取电影详情</h2>
+  
+  <p>根据电影ID获取电影的详细信息。</p>
+  
+  <div class="endpoint"><span class="method">GET</span> /api/movie/:id</div>
+  
+  <h3>参数</h3>
+  
+  <table>
+    <tr>
+      <th>参数名</th>
+      <th>类型</th>
+      <th>位置</th>
+      <th>必填</th>
+      <th>描述</th>
+    </tr>
+    <tr>
+      <td>id</td>
+      <td>string</td>
+      <td>路径</td>
+      <td>是</td>
+      <td>电影ID</td>
+    </tr>
+  </table>
+  
+  <h3>响应示例</h3>
+  
+  <div class="response">
+    <pre>
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "id": "1234",
+    "title": "模拟电影 1234",
+    "original_title": "Mock Movie 1234",
+    "alt": "https://movie.douban.com/subject/1234/",
+    "images": {
+      "small": "https://img1.doubanio.com/view/photo/s_ratio_poster/public/1234.jpg",
+      "medium": "https://img1.doubanio.com/view/photo/m_ratio_poster/public/1234.jpg",
+      "large": "https://img1.doubanio.com/view/photo/l_ratio_poster/public/1234.jpg"
+    },
+    "year": "2023",
+    "genres": ["剧情", "科幻"],
+    "rating": {
+      "max": 10,
+      "average": 8.5,
+      "stars": "45",
+      "min": 0
+    },
+    "directors": [
+      {
+        "id": "director1",
+        "name": "模拟导演",
+        "alt": "https://movie.douban.com/celebrity/director1/"
+      }
+    ],
+    "casts": [
+      {
+        "id": "actor1",
+        "name": "模拟演员1",
+        "alt": "https://movie.douban.com/celebrity/actor1/"
+      },
+      {
+        "id": "actor2",
+        "name": "模拟演员2",
+        "alt": "https://movie.douban.com/celebrity/actor2/"
+      }
+    ],
+    "summary": "这是一个模拟的电影简介，用于开发测试。这部电影讲述了一个引人入胜的故事...",
+    "subtype": "movie"
+  }
+}
+    </pre>
+  </div>
+
+  <h2 id="search">搜索电影</h2>
+  
+  <p>根据关键词搜索电影。</p>
+  
+  <div class="endpoint"><span class="method">GET</span> /api/search</div>
+  
+  <h3>参数</h3>
+  
+  <table>
+    <tr>
+      <th>参数名</th>
+      <th>类型</th>
+      <th>位置</th>
+      <th>必填</th>
+      <th>描述</th>
+    </tr>
+    <tr>
+      <td>q</td>
+      <td>string</td>
+      <td>查询</td>
+      <td>是</td>
+      <td>搜索关键词</td>
+    </tr>
+    <tr>
+      <td>start</td>
+      <td>number</td>
+      <td>查询</td>
+      <td>否</td>
+      <td>分页起始位置，默认0</td>
+    </tr>
+    <tr>
+      <td>count</td>
+      <td>number</td>
+      <td>查询</td>
+      <td>否</td>
+      <td>每页结果数量，默认20</td>
+    </tr>
+  </table>
+  
+  <h3>响应示例</h3>
+  
+  <div class="response">
+    <pre>
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "count": 2,
+    "start": 0,
+    "total": 50,
+    "subjects": [
+      {
+        "id": "movie1",
+        "title": "测试相关电影 0",
+        "original_title": "Test Movie 1",
+        "year": "2022",
+        "genres": ["剧情"],
+        "rating": {
+          "max": 10,
+          "average": 8.0,
+          "stars": "40",
+          "min": 0
+        },
+        "directors": [ ... ],
+        "casts": [ ... ],
+        "summary": "简介1",
+        "subtype": "movie"
+      },
+      {
+        "id": "movie2",
+        "title": "测试相关电影 1",
+        "original_title": "Test Movie 2",
+        "year": "2023",
+        "genres": ["科幻"],
+        "rating": {
+          "max": 10,
+          "average": 9.0,
+          "stars": "45",
+          "min": 0
+        },
+        "directors": [ ... ],
+        "casts": [ ... ],
+        "summary": "简介2",
+        "subtype": "movie"
+      }
+    ]
+  }
+}
+    </pre>
+  </div>
+
+  <h2 id="recommend">电影推荐</h2>
+  
+  <p>根据用户偏好获取电影推荐。</p>
+  
+  <div class="endpoint"><span class="method">POST</span> /api/recommend</div>
+  
+  <h3>请求体参数</h3>
+  
+  <table>
+    <tr>
+      <th>参数名</th>
+      <th>类型</th>
+      <th>必填</th>
+      <th>描述</th>
+    </tr>
+    <tr>
+      <td>genres</td>
+      <td>string[] 或 string</td>
+      <td>否</td>
+      <td>电影类型数组，如["剧情", "科幻"]或"剧情,科幻"</td>
+    </tr>
+    <tr>
+      <td>tags</td>
+      <td>string[] 或 string</td>
+      <td>否</td>
+      <td>标签数组，如["悬疑", "太空"]或"悬疑,太空"</td>
+    </tr>
+    <tr>
+      <td>year_range</td>
+      <td>string</td>
+      <td>否</td>
+      <td>年份范围，格式为"起始年份-结束年份"，如"2010-2023"</td>
+    </tr>
+    <tr>
+      <td>rating_range</td>
+      <td>string</td>
+      <td>否</td>
+      <td>评分范围，格式为"最低分-最高分"，如"7-10"</td>
+    </tr>
+    <tr>
+      <td>limit</td>
+      <td>number</td>
+      <td>否</td>
+      <td>返回结果数量限制，默认10</td>
+    </tr>
+  </table>
+  
+  <h3>请求示例</h3>
+  
+  <pre>
+POST /api/recommend
+Content-Type: application/json
+
+{
+  "genres": ["科幻", "动作"],
+  "year_range": "2015-2023",
+  "rating_range": "8-10",
+  "limit": 3
+}
+  </pre>
+  
+  <h3>响应示例</h3>
+  
+  <div class="response">
+    <pre>
+{
+  "code": 200,
+  "message": "success",
+  "data": [
+    {
+      "id": "rec0",
+      "title": "推荐电影 0",
+      "original_title": "Mock Movie rec0",
+      "year": "2017",
+      "genres": ["科幻", "动作"],
+      "rating": {
+        "max": 10,
+        "average": 8.7,
+        "stars": "45",
+        "min": 0
+      },
+      "directors": [ ... ],
+      "casts": [ ... ],
+      "summary": "这是一个模拟的电影简介，用于开发测试。这部电影讲述了一个引人入胜的故事...",
+      "subtype": "movie"
+    },
+    // 更多推荐电影...
+  ]
+}
+    </pre>
+  </div>
+
+  <h2 id="models">数据模型</h2>
+  
+  <h3>Movie 电影对象</h3>
+  
+  <table>
+    <tr>
+      <th>字段</th>
+      <th>类型</th>
+      <th>描述</th>
+    </tr>
+    <tr>
+      <td>id</td>
+      <td>string</td>
+      <td>电影ID</td>
+    </tr>
+    <tr>
+      <td>title</td>
+      <td>string</td>
+      <td>电影中文名</td>
+    </tr>
+    <tr>
+      <td>original_title</td>
+      <td>string</td>
+      <td>电影原名</td>
+    </tr>
+    <tr>
+      <td>alt</td>
+      <td>string</td>
+      <td>电影条目URL</td>
+    </tr>
+    <tr>
+      <td>images</td>
+      <td>object</td>
+      <td>电影海报图片</td>
+    </tr>
+    <tr>
+      <td>year</td>
+      <td>string</td>
+      <td>电影年份</td>
+    </tr>
+    <tr>
+      <td>genres</td>
+      <td>string[]</td>
+      <td>电影类型</td>
+    </tr>
+    <tr>
+      <td>rating</td>
+      <td>object</td>
+      <td>评分信息</td>
+    </tr>
+    <tr>
+      <td>directors</td>
+      <td>Person[]</td>
+      <td>导演列表</td>
+    </tr>
+    <tr>
+      <td>casts</td>
+      <td>Person[]</td>
+      <td>主演列表</td>
+    </tr>
+    <tr>
+      <td>summary</td>
+      <td>string</td>
+      <td>剧情简介</td>
+    </tr>
+    <tr>
+      <td>subtype</td>
+      <td>string</td>
+      <td>条目类型，如"movie"</td>
+    </tr>
+  </table>
+  
+  <h3>Person 人物对象</h3>
+  
+  <table>
+    <tr>
+      <th>字段</th>
+      <th>类型</th>
+      <th>描述</th>
+    </tr>
+    <tr>
+      <td>id</td>
+      <td>string</td>
+      <td>人物ID</td>
+    </tr>
+    <tr>
+      <td>name</td>
+      <td>string</td>
+      <td>人物姓名</td>
+    </tr>
+    <tr>
+      <td>alt</td>
+      <td>string</td>
+      <td>人物条目URL</td>
+    </tr>
+    <tr>
+      <td>avatars</td>
+      <td>object</td>
+      <td>人物头像图片</td>
+    </tr>
+  </table>
+
+  <h3>SearchResult 搜索结果对象</h3>
+  
+  <table>
+    <tr>
+      <th>字段</th>
+      <th>类型</th>
+      <th>描述</th>
+    </tr>
+    <tr>
+      <td>count</td>
+      <td>number</td>
+      <td>当前返回的结果数量</td>
+    </tr>
+    <tr>
+      <td>start</td>
+      <td>number</td>
+      <td>分页起始位置</td>
+    </tr>
+    <tr>
+      <td>total</td>
+      <td>number</td>
+      <td>总结果数</td>
+    </tr>
+    <tr>
+      <td>subjects</td>
+      <td>Movie[]</td>
+      <td>电影列表</td>
+    </tr>
+  </table>
+
+  <footer style="margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px; color: #999;">
+    <p>豆瓣电影MCP API文档 · Version 1.0.0</p>
+  </footer>
+</body>
+</html> 

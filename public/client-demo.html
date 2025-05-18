@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>豆瓣电影MCP API客户端示例</title>
+  <style>
+    body {
+      font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #007722;
+      border-bottom: 2px solid #007722;
+      padding-bottom: 10px;
+    }
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #007722;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #006622;
+    }
+    pre {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+      max-height: 300px;
+    }
+    .response {
+      margin-top: 15px;
+    }
+    .tab {
+      display: none;
+    }
+    .tab.active {
+      display: block;
+    }
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #ddd;
+      margin-bottom: 20px;
+    }
+    .tab-button {
+      padding: 10px 15px;
+      background: none;
+      border: none;
+      color: #333;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-right: 10px;
+    }
+    .tab-button.active {
+      border-bottom: 2px solid #007722;
+      color: #007722;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>豆瓣电影MCP API客户端示例</h1>
+  
+  <div class="tabs">
+    <button class="tab-button active" onclick="openTab(event, 'search')">搜索电影</button>
+    <button class="tab-button" onclick="openTab(event, 'detail')">电影详情</button>
+    <button class="tab-button" onclick="openTab(event, 'recommend')">电影推荐</button>
+  </div>
+  
+  <div id="search" class="tab active">
+    <div class="card">
+      <h2>搜索电影</h2>
+      <div class="form-group">
+        <label for="search-keyword">搜索关键词</label>
+        <input type="text" id="search-keyword" placeholder="请输入电影名称或相关关键词">
+      </div>
+      <div class="form-group">
+        <label for="search-start">起始位置</label>
+        <input type="number" id="search-start" value="0" min="0">
+      </div>
+      <div class="form-group">
+        <label for="search-count">返回数量</label>
+        <input type="number" id="search-count" value="10" min="1" max="50">
+      </div>
+      <button onclick="searchMovies()">搜索</button>
+      
+      <div class="response">
+        <h3>响应结果</h3>
+        <pre id="search-result">// 请求结果将显示在这里</pre>
+      </div>
+    </div>
+  </div>
+  
+  <div id="detail" class="tab">
+    <div class="card">
+      <h2>获取电影详情</h2>
+      <div class="form-group">
+        <label for="movie-id">电影ID</label>
+        <input type="text" id="movie-id" placeholder="请输入电影ID">
+      </div>
+      <button onclick="getMovieDetail()">获取详情</button>
+      
+      <div class="response">
+        <h3>响应结果</h3>
+        <pre id="detail-result">// 请求结果将显示在这里</pre>
+      </div>
+    </div>
+  </div>
+  
+  <div id="recommend" class="tab">
+    <div class="card">
+      <h2>获取电影推荐</h2>
+      <div class="form-group">
+        <label for="rec-genres">电影类型</label>
+        <input type="text" id="rec-genres" placeholder="多个类型用逗号分隔，如：科幻,剧情">
+      </div>
+      <div class="form-group">
+        <label for="rec-year">年份范围</label>
+        <input type="text" id="rec-year" placeholder="格式：起始年份-结束年份，如：2010-2023">
+      </div>
+      <div class="form-group">
+        <label for="rec-rating">评分范围</label>
+        <input type="text" id="rec-rating" placeholder="格式：最低分-最高分，如：7-10">
+      </div>
+      <div class="form-group">
+        <label for="rec-limit">返回数量</label>
+        <input type="number" id="rec-limit" value="5" min="1" max="20">
+      </div>
+      <button onclick="getRecommendations()">获取推荐</button>
+      
+      <div class="response">
+        <h3>响应结果</h3>
+        <pre id="recommend-result">// 请求结果将显示在这里</pre>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // API基础URL，根据实际部署修改
+    const API_BASE_URL = window.location.origin + '/api';
+    
+    // 切换标签页
+    function openTab(evt, tabName) {
+      // 隐藏所有标签页
+      var tabs = document.getElementsByClassName("tab");
+      for (var i = 0; i < tabs.length; i++) {
+        tabs[i].className = tabs[i].className.replace(" active", "");
+      }
+      
+      // 取消所有按钮的active状态
+      var buttons = document.getElementsByClassName("tab-button");
+      for (var i = 0; i < buttons.length; i++) {
+        buttons[i].className = buttons[i].className.replace(" active", "");
+      }
+      
+      // 显示当前标签页并设置按钮为active
+      document.getElementById(tabName).className += " active";
+      evt.currentTarget.className += " active";
+    }
+    
+    // 搜索电影
+    async function searchMovies() {
+      const keyword = document.getElementById('search-keyword').value;
+      if (!keyword) {
+        alert('请输入搜索关键词');
+        return;
+      }
+      
+      const start = document.getElementById('search-start').value;
+      const count = document.getElementById('search-count').value;
+      
+      const url = `${API_BASE_URL}/search?q=${encodeURIComponent(keyword)}&start=${start}&count=${count}`;
+      
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        document.getElementById('search-result').textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        document.getElementById('search-result').textContent = `错误: ${error.message}`;
+      }
+    }
+    
+    // 获取电影详情
+    async function getMovieDetail() {
+      const movieId = document.getElementById('movie-id').value;
+      if (!movieId) {
+        alert('请输入电影ID');
+        return;
+      }
+      
+      const url = `${API_BASE_URL}/movie/${encodeURIComponent(movieId)}`;
+      
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        document.getElementById('detail-result').textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        document.getElementById('detail-result').textContent = `错误: ${error.message}`;
+      }
+    }
+    
+    // 获取电影推荐
+    async function getRecommendations() {
+      const genres = document.getElementById('rec-genres').value;
+      const yearRange = document.getElementById('rec-year').value;
+      const ratingRange = document.getElementById('rec-rating').value;
+      const limit = document.getElementById('rec-limit').value;
+      
+      const params = {};
+      
+      if (genres) {
+        params.genres = genres;
+      }
+      
+      if (yearRange) {
+        params.year_range = yearRange;
+      }
+      
+      if (ratingRange) {
+        params.rating_range = ratingRange;
+      }
+      
+      if (limit) {
+        params.limit = parseInt(limit);
+      }
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}/recommend`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(params)
+        });
+        
+        const data = await response.json();
+        
+        document.getElementById('recommend-result').textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        document.getElementById('recommend-result').textContent = `错误: ${error.message}`;
+      }
+    }
+  </script>
+</body>
+</html> 

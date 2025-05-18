@@ -7,6 +7,8 @@
 - 获取电影详情：根据电影ID获取详细信息
 - 搜索电影：根据关键词搜索电影
 - 电影推荐：根据用户偏好（类型、标签、年代等）获取电影推荐
+- 内置API文档：通过浏览器访问完整API说明
+- 客户端示例：提供浏览器交互式Demo和多种编程语言的客户端示例
 
 ## 技术栈
 
@@ -31,6 +33,7 @@ pnpm install
 PORT=3000
 DOUBAN_API_BASE_URL=https://api.douban.com/v2
 DOUBAN_API_KEY=your_douban_api_key
+LOG_LEVEL=info
 ```
 
 > 注意：本项目目前使用模拟数据，不需要真实的豆瓣API密钥即可运行。
@@ -52,6 +55,79 @@ pnpm build
 ```bash
 pnpm start
 ```
+
+## 文档和客户端示例
+
+启动服务后，可以通过以下URL访问各种资源：
+
+- API信息：`http://localhost:3000/`
+- API文档：`http://localhost:3000/docs`
+- 客户端示例：`http://localhost:3000/demo`
+
+## 客户端示例代码
+
+### Node.js 客户端
+
+```javascript
+const axios = require('axios');
+
+// 基础URL配置
+const API_BASE_URL = 'http://localhost:3000/api';
+
+// 搜索电影
+async function searchMovies(keyword, start = 0, count = 10) {
+  const response = await axios.get(`${API_BASE_URL}/search`, {
+    params: { q: keyword, start, count }
+  });
+  return response.data;
+}
+
+// 获取电影详情
+async function getMovieDetail(movieId) {
+  const response = await axios.get(`${API_BASE_URL}/movie/${movieId}`);
+  return response.data;
+}
+
+// 获取电影推荐
+async function getRecommendations(params = {}) {
+  const response = await axios.post(`${API_BASE_URL}/recommend`, params);
+  return response.data;
+}
+```
+
+### Python 客户端
+
+```python
+import requests
+
+# 基础URL配置
+API_BASE_URL = 'http://localhost:3000/api'
+
+# 搜索电影
+def search_movies(keyword, start=0, count=10):
+    response = requests.get(
+        f"{API_BASE_URL}/search",
+        params={"q": keyword, "start": start, "count": count}
+    )
+    response.raise_for_status()
+    return response.json()
+
+# 获取电影详情
+def get_movie_detail(movie_id):
+    response = requests.get(f"{API_BASE_URL}/movie/{movie_id}")
+    response.raise_for_status()
+    return response.json()
+
+# 获取电影推荐
+def get_recommendations(params=None):
+    if params is None:
+        params = {}
+    response = requests.post(f"{API_BASE_URL}/recommend", json=params)
+    response.raise_for_status()
+    return response.json()
+```
+
+更多详细的客户端示例代码可以在 `examples` 目录下找到。
 
 ## API 接口说明
 
@@ -176,6 +252,15 @@ Body: {"genres": ["科幻"], "rating_range": "8-10", "limit": 5}
 4. 《模拟电影 3》(8.9分) - 2019年
 5. 《模拟电影 4》(9.0分) - 2022年
 ```
+
+## 日志系统
+
+项目集成了一个简单的日志系统，可以通过环境变量`LOG_LEVEL`控制日志级别：
+
+- `error`: 只显示错误信息
+- `warn`: 显示警告和错误信息
+- `info`: 显示信息、警告和错误信息（默认）
+- `debug`: 显示所有日志信息，包括调试信息
 
 ## 注意事项
 
