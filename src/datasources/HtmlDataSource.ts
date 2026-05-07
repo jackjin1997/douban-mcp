@@ -8,7 +8,7 @@ import { MemoryCache } from '../cache/MemoryCache.js';
 import { DomainLimiter } from '../ratelimit/Limiter.js';
 import { CookieManager } from '../auth/CookieManager.js';
 import { AuthError, NetworkError, NotFoundError, RateLimitError, WriteDisabledError } from '../errors.js';
-import { parseUserProfile } from './parsers/user.js';
+import { parseUserProfile, parseUserCollections, parseUserDoulist } from './parsers/user.js';
 import {
   parseMovieDetail, parseMovieSearch, parseTop250, parseMovieReviewsFromHtml,
 } from './parsers/movie.js';
@@ -76,6 +76,13 @@ export class HtmlDataSource implements IDoubanDataSource {
       );
     }
     return res.data as string;
+  }
+
+  private resolveUid(uid: string | null): string {
+    if (uid) return uid;
+    const own = this.cookies.getOwnUid();
+    if (!own) throw new AuthError('uid is null and no DOUBAN_COOKIE configured');
+    return own;
   }
 
   async getCurrentUser(): Promise<UserProfile | null> {
@@ -164,9 +171,38 @@ export class HtmlDataSource implements IDoubanDataSource {
       return parseBookSearch(html).slice(0, count);
     });
   }
-  getUserCollections(_uid: string | null, _category: 'movie' | 'book', _status: CollectionStatus, _start: number, _count: number): Promise<Collection[]> { return Promise.reject(new Error('NYI: M2.12')); }
-  getUserDoulist(_uid: string | null): Promise<Doulist[]> { return Promise.reject(new Error('NYI: M2.12')); }
-  getUserProfile(_uid: string | null): Promise<UserProfile> { return Promise.reject(new Error('NYI: M2.12')); }
+  async getUserCollections(
+    uid: string | null, category: 'movie' | 'book', status: CollectionStatus, start: number, count: number
+  ): Promise<Collection[]> {
+    const realUid = this.resolveUid(uid);
+    const ttl = uid === null ? 300 : 1800;
+    const key = `html:getUserCollections:${realUid}:${category}:${status}:${start}:${count}`;
+    return this.opts.cache.wrap(key, ttl, async () => {
+      const base = category === 'movie' ? 'https://movie.douban.com' : 'https://book.douban.com';
+      const path = status === 'wish' ? 'wish' : status === 'do' ? 'do' : 'collect';
+      const url = `${base}/people/${realUid}/${path}?start=${start}`;
+      const html = await this.httpGet(url, { domain: new URL(base).host });
+      return parseUserCollections(html, category, status).slice(0, count);
+    });
+  }
+
+  async getUserDoulist(uid: string | null): Promise<Doulist[]> {
+    const realUid = this.resolveUid(uid);
+    const key = `html:getUserDoulist:${realUid}`;
+    return this.opts.cache.wrap(key, 3600, async () => {
+      const html = await this.httpGet(`https://www.douban.com/people/${realUid}/doulists/all`, { domain: 'www.douban.com' });
+      return parseUserDoulist(html);
+    });
+  }
+
+  async getUserProfile(uid: string | null): Promise<UserProfile> {
+    const realUid = this.resolveUid(uid);
+    const key = `html:getUserProfile:${realUid}`;
+    return this.opts.cache.wrap(key, 3600, async () => {
+      const html = await this.httpGet(`https://www.douban.com/people/${realUid}/`, { domain: 'www.douban.com' });
+      return parseUserProfile(html);
+    });
+  }
   markSubject(_category: 'movie' | 'book', _id: string, _status: CollectionStatus, _options: MarkOptions): Promise<void> { return Promise.reject(new WriteDisabledError('write methods land in M4')); }
   unmarkSubject(_category: 'movie' | 'book', _id: string): Promise<void> { return Promise.reject(new WriteDisabledError('write methods land in M4')); }
 }
