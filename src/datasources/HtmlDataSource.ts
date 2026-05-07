@@ -7,7 +7,7 @@ import type {
 import { MemoryCache } from '../cache/MemoryCache.js';
 import { DomainLimiter } from '../ratelimit/Limiter.js';
 import { CookieManager } from '../auth/CookieManager.js';
-import { AuthError, NetworkError, NotFoundError, RateLimitError, WriteDisabledError } from '../errors.js';
+import { AuthError, NetworkError, NotFoundError, RateLimitError } from '../errors.js';
 import { parseUserProfile, parseUserCollections, parseUserDoulist } from './parsers/user.js';
 import {
   parseMovieDetail, parseMovieSearch, parseTop250, parseMovieReviewsFromHtml,
