@@ -1,0 +1,9 @@
+{
+  "mcp.servers": {
+    "douban": {
+      "transport": "stdio",
+      "command": "npx",
+      "args": ["-y", "douban-mcp", "serve"]
+    }
+  }
+}
