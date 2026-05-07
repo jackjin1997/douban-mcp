@@ -19,3 +19,27 @@ describe('createLogger', () => {
     }
   });
 });
+
+describe('createLogger redaction', () => {
+  it('redacts Cookie header in serialized error', () => {
+    const chunks: string[] = [];
+    const memStream: any = {
+      write(chunk: unknown) {
+        chunks.push(typeof chunk === 'string' ? chunk : String(chunk));
+        return true;
+      },
+      flush() {},
+      end() {},
+    };
+
+    const log = createLogger(memStream);
+    const err: any = new Error('mock 401');
+    err.config = { headers: { Cookie: 'dbcl2="42:secret"; ck=SECRET' } };
+    log.error(err, 'request failed');
+
+    const out = chunks.join('');
+    expect(out).not.toContain('SECRET');
+    expect(out).not.toContain('dbcl2="42:');
+    expect(out).toMatch(/REDACTED|\*\*\*/);
+  });
+});

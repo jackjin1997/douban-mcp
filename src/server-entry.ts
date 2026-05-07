@@ -54,7 +54,7 @@ export async function runServe(args: string[]): Promise<void> {
         }
         res.writeHead(404).end();
       } catch (e) {
-        logger.error('sse handler error', e);
+        logger.error(e, 'sse handler error');
         if (!res.headersSent) res.writeHead(500).end();
       }
     });

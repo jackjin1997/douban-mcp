@@ -20,7 +20,7 @@ export function formatError(e: unknown): string {
   if (e instanceof ParseError)        return '❌ 豆瓣页面结构变化导致解析失败。请到 GitHub 提交 issue：https://github.com/jackjin1997/douban-mcp/issues';
   if (e instanceof WriteDisabledError)return '❌ 写操作未启用。请设置环境变量 DOUBAN_ENABLE_WRITE=true 并重启服务。';
   if (e instanceof NetworkError)      return '⚠️ 网络错误，请检查网络后重试。';
-  logger.error('未分类错误', e);
+  logger.error(e, '未分类错误');
   return `❌ 未知错误：${e instanceof Error ? e.message : String(e)}`;
 }
 
