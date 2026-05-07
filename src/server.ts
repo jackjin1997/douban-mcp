@@ -13,7 +13,7 @@ export function buildServer(opts: RegistryOpts): McpServer {
         inputSchema: tool.inputSchema.shape,  // 从 ZodObject 取 raw shape 喂给 SDK
         annotations: tool.annotations,
       },
-      withErrorBoundary(tool.handler) as any,
+      withErrorBoundary(async (args: any) => tool.handler(tool.inputSchema.parse(args))) as any,
     );
   }
   return server;
