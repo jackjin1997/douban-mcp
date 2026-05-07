@@ -1,0 +1,33 @@
+name: Nightly Smoke
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: Anonymous read smoke (real network)
+        id: smoke
+        continue-on-error: true
+        run: |
+          node dist/index.js --json search-movie --q "肖申克的救赎" --count 1 > out.json
+          test "$(jq 'length' out.json)" -ge 1
+      - name: Open issue on failure
+        if: steps.smoke.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner, repo: context.repo.repo,
+              title: 'Nightly smoke failed: HtmlDataSource selectors may have shifted',
+              body: 'Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}',
+              labels: ['bug', 'parser-rot'],
+            });
