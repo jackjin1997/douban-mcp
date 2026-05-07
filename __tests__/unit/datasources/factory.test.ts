@@ -1,5 +1,6 @@
 import { createDataSource } from '../../../src/datasources/factory.js';
 import { HtmlDataSource } from '../../../src/datasources/HtmlDataSource.js';
+import { FrodoDataSource } from '../../../src/datasources/FrodoDataSource.js';
 
 describe('createDataSource', () => {
   it('default returns HtmlDataSource', () => {
@@ -14,14 +15,14 @@ describe('createDataSource', () => {
     expect(() => createDataSource({ kind: 'mystery' as any })).toThrow();
   });
 
-  it('frodo throws "M6" until implemented', () => {
-    expect(() => createDataSource({ kind: 'frodo' })).toThrow(/M6/);
+  it('frodo returns FrodoDataSource', () => {
+    expect(createDataSource({ kind: 'frodo' })).toBeInstanceOf(FrodoDataSource);
   });
 
-  it('honors DOUBAN_DATA_SOURCE env when kind not passed', () => {
+  it('honors DOUBAN_DATA_SOURCE=frodo env', () => {
     process.env.DOUBAN_DATA_SOURCE = 'frodo';
     try {
-      expect(() => createDataSource({})).toThrow(/M6/);
+      expect(createDataSource({})).toBeInstanceOf(FrodoDataSource);
     } finally {
       delete process.env.DOUBAN_DATA_SOURCE;
     }

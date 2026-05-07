@@ -1,4 +1,5 @@
 import { HtmlDataSource } from './HtmlDataSource.js';
+import { FrodoDataSource } from './FrodoDataSource.js';
 import { MemoryCache } from '../cache/MemoryCache.js';
 import { DomainLimiter } from '../ratelimit/Limiter.js';
 import type { IDoubanDataSource } from './types.js';
@@ -15,6 +16,6 @@ export function createDataSource(opts: FactoryOpts = {}): IDoubanDataSource {
   const cache = opts.cache ?? new MemoryCache();
   const rateLimiter = opts.rateLimiter ?? new DomainLimiter({ readPerSec: 1, writePerSec: 1 / 3, cooldownSec: 60 });
   if (kind === 'html') return new HtmlDataSource({ cookie: opts.cookie, cache, rateLimiter });
-  if (kind === 'frodo') throw new Error('FrodoDataSource lands in M6 — set DOUBAN_DATA_SOURCE=html');
+  if (kind === 'frodo') return new FrodoDataSource({ cookie: opts.cookie, cache, rateLimiter });
   throw new Error(`Unknown DOUBAN_DATA_SOURCE=${kind}`);
 }
