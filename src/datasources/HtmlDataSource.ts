@@ -11,6 +11,7 @@ import { AuthError, NetworkError, NotFoundError, RateLimitError } from '../error
 import { parseUserProfile, parseUserCollections, parseUserDoulist } from './parsers/user.js';
 import {
   parseMovieDetail, parseMovieSearch, parseTop250, parseMovieReviewsFromHtml,
+  parseMovieWeeklyChart, parseMovieComingChart,
 } from './parsers/movie.js';
 import { parseBookDetail, parseBookSearch, parseBookReviewsFromHtml } from './parsers/book.js';
 
@@ -131,10 +132,10 @@ export class HtmlDataSource implements IDoubanDataSource {
       }
       if (kind === 'weekly') {
         const html = await this.httpGet('https://movie.douban.com/chart', { domain: 'movie.douban.com' });
-        return parseMovieSearch(html).slice(0, count);
+        return parseMovieWeeklyChart(html).slice(0, count);
       }
       const html = await this.httpGet('https://movie.douban.com/coming', { domain: 'movie.douban.com' });
-      return parseMovieSearch(html).slice(0, count);
+      return parseMovieComingChart(html).slice(0, count);
     });
   }
   async searchBook(q: string, count: number): Promise<SubjectSummary[]> {

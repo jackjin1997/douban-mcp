@@ -165,6 +165,58 @@ export function parseTop250(html: string): SubjectSummary[] {
   return out;
 }
 
+/**
+ * 解析 movie.douban.com/chart 的"正在热映"列表
+ * 页面结构：每部电影一个 table，内含 tr.item，图片链接 a.nbg 的 title 属性即电影名
+ */
+export function parseMovieWeeklyChart(html: string): SubjectSummary[] {
+  const $ = cheerio.load(html);
+  const out: SubjectSummary[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  $('tr.item').each((_: number, el: any) => {
+    const nbg = $(el).find('a.nbg').first();
+    const url = nbg.attr('href') ?? '';
+    const m = url.match(/\/subject\/(\d+)/);
+    if (!m) return;
+    const title = nbg.attr('title') ?? $(el).find('a[href*="/subject/"]').not('.nbg').first().text().trim();
+    if (!title) return;
+    const ratingText = $(el).find('.rating_nums').first().text();
+    out.push({
+      id: m[1],
+      title,
+      url: url.startsWith('http') ? url : `https://movie.douban.com${url}`,
+      rating: parseFloat(ratingText) || undefined,
+      cover: $(el).find('img').first().attr('src') ?? undefined,
+    });
+  });
+  return out;
+}
+
+/**
+ * 解析 movie.douban.com/coming 的"近期上映"
+ * 页面结构：table.coming_list tbody tr，每行 td a[href*=subject] 含电影名
+ */
+export function parseMovieComingChart(html: string): SubjectSummary[] {
+  const $ = cheerio.load(html);
+  const out: SubjectSummary[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  $('table.coming_list tbody tr').each((_: number, el: any) => {
+    const a = $(el).find('a[href*="/subject/"]').first();
+    const url = a.attr('href') ?? '';
+    const m = url.match(/\/subject\/(\d+)/);
+    if (!m) return;
+    const title = a.text().trim();
+    if (!title) return;
+    out.push({
+      id: m[1],
+      title,
+      url: url.startsWith('http') ? url : `https://movie.douban.com${url}`,
+      cover: $(el).find('img').first().attr('src') ?? undefined,
+    });
+  });
+  return out;
+}
+
 export function parseMovieReviewsFromHtml(html: string): import('../types.js').Review[] {
   const $ = cheerio.load(html);
   const out: import('../types.js').Review[] = [];

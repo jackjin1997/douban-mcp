@@ -73,3 +73,31 @@ describe('HtmlDataSource.getMovieChart top250', () => {
     expect(items.length).toBe(25);
   });
 });
+
+describe('HtmlDataSource.getMovieChart weekly', () => {
+  beforeEach(() => mockedAxios.get.mockReset());
+
+  it('returns parsed weekly chart items', async () => {
+    mockedAxios.get.mockResolvedValue({
+      status: 200,
+      data: loadFixture('movie/chart-weekly.html'),
+      request: { res: { responseUrl: 'https://movie.douban.com/chart' } },
+    });
+    const items = await makeDS().getMovieChart('weekly', 0, 10);
+    expect(items.length).toBeGreaterThanOrEqual(5);
+  });
+});
+
+describe('HtmlDataSource.getMovieChart new (coming)', () => {
+  beforeEach(() => mockedAxios.get.mockReset());
+
+  it('returns parsed coming chart items', async () => {
+    mockedAxios.get.mockResolvedValue({
+      status: 200,
+      data: loadFixture('movie/coming.html'),
+      request: { res: { responseUrl: 'https://movie.douban.com/coming' } },
+    });
+    const items = await makeDS().getMovieChart('new', 0, 10);
+    expect(items.length).toBeGreaterThanOrEqual(5);
+  });
+});
