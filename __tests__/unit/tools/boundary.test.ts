@@ -1,4 +1,4 @@
-import { withErrorBoundary, formatError, errorToCode } from '../../../src/tools/_boundary.js';
+import { withErrorBoundary, errorToCode } from '../../../src/tools/_boundary.js';
 import {
   AuthError, RateLimitError, NotFoundError, WriteDisabledError,
   ParseError, NetworkError,
