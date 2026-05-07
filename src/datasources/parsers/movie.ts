@@ -2,12 +2,7 @@ import * as cheerio from 'cheerio';
 import type { MovieDetail, SubjectSummary, Person } from '../types.js';
 import { ParseError } from '../../errors.js';
 
-export function parseMovieDetail(rawHtml: string, id: string): MovieDetail {
-  // fixture 文件可能被 JSON.stringify 序列化，自动解包
-  let html = rawHtml;
-  if (rawHtml.trimStart().startsWith('"')) {
-    try { html = JSON.parse(rawHtml); } catch { /* use as-is */ }
-  }
+export function parseMovieDetail(html: string, id: string): MovieDetail {
   const $ = cheerio.load(html);
 
   const title = $('span[property="v:itemreviewed"]').text().trim();
