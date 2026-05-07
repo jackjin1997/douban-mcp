@@ -164,3 +164,23 @@ export function parseTop250(html: string): SubjectSummary[] {
   });
   return out;
 }
+
+export function parseMovieReviewsFromHtml(html: string): import('../types.js').Review[] {
+  const $ = cheerio.load(html);
+  const out: import('../types.js').Review[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  $('#comments .comment-item').each((_: any, el: any) => {
+    const author = $(el).find('.comment-info a').first();
+    const ratingClass = $(el).find('.rating').attr('class') ?? '';
+    const ratingMatch = ratingClass.match(/allstar(\d)0/);
+    out.push({
+      author: author.text().trim(),
+      authorUid: (author.attr('href') ?? '').match(/\/people\/([^/]+)/)?.[1] ?? '',
+      rating: ratingMatch ? parseInt(ratingMatch[1], 10) : undefined,
+      content: $(el).find('.short').text().trim(),
+      publishedAt: $(el).find('.comment-time').attr('title') ?? '',
+      usefulCount: parseInt($(el).find('.vote-count').text(), 10) || 0,
+    });
+  });
+  return out;
+}

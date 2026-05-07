@@ -9,6 +9,9 @@ import { DomainLimiter } from '../ratelimit/Limiter.js';
 import { CookieManager } from '../auth/CookieManager.js';
 import { AuthError, NetworkError, NotFoundError, RateLimitError, WriteDisabledError } from '../errors.js';
 import { parseUserProfile } from './parsers/user.js';
+import {
+  parseMovieDetail, parseMovieSearch, parseTop250, parseMovieReviewsFromHtml,
+} from './parsers/movie.js';
 
 export interface HtmlDataSourceOpts {
   cookie?: string;
@@ -86,11 +89,46 @@ export class HtmlDataSource implements IDoubanDataSource {
     });
   }
 
-  // 后续方法 NYI：M2.10/2.11/2.12 实现
-  searchMovie(_q: string, _count: number): Promise<SubjectSummary[]> { return Promise.reject(new Error('NYI: M2.10')); }
-  getMovie(_id: string): Promise<MovieDetail> { return Promise.reject(new Error('NYI: M2.10')); }
-  getMovieReviews(_id: string, _count: number): Promise<Review[]> { return Promise.reject(new Error('NYI: M2.10')); }
-  getMovieChart(_kind: MovieChartKind, _start: number, _count: number): Promise<SubjectSummary[]> { return Promise.reject(new Error('NYI: M2.10')); }
+  async searchMovie(q: string, count: number): Promise<SubjectSummary[]> {
+    const key = `html:searchMovie:${q}:${count}`;
+    return this.opts.cache.wrap(key, 1800, async () => {
+      const url = `https://search.douban.com/movie/subject_search?search_text=${encodeURIComponent(q)}&cat=1002`;
+      const html = await this.httpGet(url, { domain: 'search.douban.com' });
+      return parseMovieSearch(html).slice(0, count);
+    });
+  }
+
+  async getMovie(id: string): Promise<MovieDetail> {
+    const key = `html:getMovie:${id}`;
+    return this.opts.cache.wrap(key, 21600, async () => {
+      const html = await this.httpGet(`https://movie.douban.com/subject/${id}/`, { domain: 'movie.douban.com' });
+      return parseMovieDetail(html, id);
+    });
+  }
+
+  async getMovieReviews(id: string, count: number): Promise<Review[]> {
+    const key = `html:getMovieReviews:${id}:${count}`;
+    return this.opts.cache.wrap(key, 1800, async () => {
+      const html = await this.httpGet(`https://movie.douban.com/subject/${id}/comments?status=P`, { domain: 'movie.douban.com' });
+      return parseMovieReviewsFromHtml(html).slice(0, count);
+    });
+  }
+
+  async getMovieChart(kind: MovieChartKind, start: number, count: number): Promise<SubjectSummary[]> {
+    const key = `html:getMovieChart:${kind}:${start}:${count}`;
+    return this.opts.cache.wrap(key, 3600, async () => {
+      if (kind === 'top250') {
+        const html = await this.httpGet(`https://movie.douban.com/top250?start=${start}`, { domain: 'movie.douban.com' });
+        return parseTop250(html).slice(0, count);
+      }
+      if (kind === 'weekly') {
+        const html = await this.httpGet('https://movie.douban.com/chart', { domain: 'movie.douban.com' });
+        return parseMovieSearch(html).slice(0, count);
+      }
+      const html = await this.httpGet('https://movie.douban.com/coming', { domain: 'movie.douban.com' });
+      return parseMovieSearch(html).slice(0, count);
+    });
+  }
   searchBook(_q: string, _count: number): Promise<SubjectSummary[]> { return Promise.reject(new Error('NYI: M2.11')); }
   getBook(_id: string): Promise<BookDetail> { return Promise.reject(new Error('NYI: M2.11')); }
   getBookReviews(_id: string, _count: number): Promise<Review[]> { return Promise.reject(new Error('NYI: M2.11')); }
