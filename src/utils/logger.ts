@@ -1,67 +1,25 @@
-import * as dotenv from "dotenv";
+import pino from 'pino';
 
-dotenv.config();
+const COOKIE_KEYS = ['bid', 'dbcl2', 'ck'];
 
-// 日志级别
-enum LogLevel {
-  ERROR = 0,
-  WARN = 1,
-  INFO = 2,
-  DEBUG = 3,
+export function redactCookie(input: string): string {
+  let out = input;
+  for (const key of COOKIE_KEYS) {
+    out = out.replace(new RegExp(`(${key})=("?)[^;"]*("?)`, 'g'), '$1=$2***$3');
+  }
+  return out;
 }
 
-// 配置的日志级别
-const configuredLevel = process.env.LOG_LEVEL
-  ? (process.env.LOG_LEVEL.toLowerCase() as keyof typeof LogLevel)
-  : "info";
-
-// 当前运行的日志级别
-const currentLevel =
-  LogLevel[configuredLevel.toUpperCase() as keyof typeof LogLevel] !== undefined
-    ? LogLevel[configuredLevel.toUpperCase() as keyof typeof LogLevel]
-    : LogLevel.INFO;
-
-class Logger {
-  private formatMessage(level: string, message: string, data?: any): string {
-    const timestamp = new Date().toISOString();
-    let formattedMessage = `[${timestamp}] [${level.toUpperCase()}] ${message}`;
-
-    if (data) {
-      const dataString =
-        typeof data === "object"
-          ? JSON.stringify(data, null, 2)
-          : data.toString();
-
-      formattedMessage += `\n${dataString}`;
-    }
-
-    return formattedMessage;
-  }
-
-  public debug(message: string, data?: any): void {
-    if (currentLevel >= LogLevel.DEBUG) {
-      console.debug(this.formatMessage("debug", message, data));
-    }
-  }
-
-  public info(message: string, data?: any): void {
-    if (currentLevel >= LogLevel.INFO) {
-      console.info(this.formatMessage("info", message, data));
-    }
-  }
-
-  public warn(message: string, data?: any): void {
-    if (currentLevel >= LogLevel.WARN) {
-      console.warn(this.formatMessage("warn", message, data));
-    }
-  }
-
-  public error(message: string, error?: any): void {
-    if (currentLevel >= LogLevel.ERROR) {
-      console.error(this.formatMessage("error", message, error));
-    }
-  }
+export interface Logger {
+  debug(msg: string, ...args: unknown[]): void;
+  info(msg: string, ...args: unknown[]): void;
+  warn(msg: string, ...args: unknown[]): void;
+  error(msg: string, ...args: unknown[]): void;
 }
 
-// 导出单例
-export const logger = new Logger();
+export function createLogger(): Logger {
+  const level = (process.env.DOUBAN_LOG_LEVEL ?? 'info') as pino.LevelWithSilent;
+  return pino({ level, transport: { target: 'pino/file', options: { destination: 2 } } }) as unknown as Logger;
+}
+
+export const logger = createLogger();
