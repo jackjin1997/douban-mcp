@@ -203,6 +203,82 @@ export class HtmlDataSource implements IDoubanDataSource {
       return parseUserProfile(html);
     });
   }
-  markSubject(_category: 'movie' | 'book', _id: string, _status: CollectionStatus, _options: MarkOptions): Promise<void> { return Promise.reject(new WriteDisabledError('write methods land in M4')); }
-  unmarkSubject(_category: 'movie' | 'book', _id: string): Promise<void> { return Promise.reject(new WriteDisabledError('write methods land in M4')); }
+  async markSubject(
+    category: 'movie' | 'book',
+    id: string,
+    status: CollectionStatus,
+    options: MarkOptions,
+  ): Promise<void> {
+    if (!this.cookies.hasLogin()) throw new AuthError('mark requires DOUBAN_COOKIE');
+    const ck = this.cookies.getCkToken();
+    if (!ck) throw new AuthError('cookie missing ck token (CSRF)');
+
+    const domain = category === 'movie' ? 'movie.douban.com' : 'book.douban.com';
+    await this.opts.rateLimiter.acquireWrite(domain);
+
+    const params = new URLSearchParams();
+    params.set('ck', ck);
+    params.set('interest', status);
+    if (options.rating != null) params.set('rating', String(options.rating));
+    if (options.comment) params.set('comment', options.comment);
+    if (options.tags?.length) params.set('tags', options.tags.join(' '));
+    params.set('share-shuo', options.shareToFeed ? 'douban' : '');
+
+    const path = status === 'wish' ? 'wish' : status === 'do' ? 'do' : 'collect';
+    const url = `https://${domain}/j/subject/${id}/${path}`;
+    const res = await this.http.post(url, params, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Referer': `https://${domain}/subject/${id}/`,
+        'Cookie': this.cookies.toHeader(),
+      },
+    }).catch((e: unknown) => {
+      const msg = e instanceof Error ? e.message : 'network error';
+      throw new NetworkError(msg);
+    });
+
+    if (res.status === 401 || res.status === 403) {
+      this.opts.rateLimiter.markCooldown(domain);
+      this.opts.rateLimiter.lockWriteForSession(domain);
+      throw new RateLimitError('write blocked by risk control; session write lock engaged');
+    }
+    if (res.status >= 400) throw new NetworkError(`HTTP ${res.status}`);
+
+    const ownUid = this.cookies.getOwnUid();
+    if (ownUid) this.opts.cache.invalidate(`html:getUserCollections:${ownUid}:${category}`);
+  }
+
+  async unmarkSubject(category: 'movie' | 'book', id: string): Promise<void> {
+    if (!this.cookies.hasLogin()) throw new AuthError('unmark requires DOUBAN_COOKIE');
+    const ck = this.cookies.getCkToken();
+    if (!ck) throw new AuthError('cookie missing ck token');
+
+    const domain = category === 'movie' ? 'movie.douban.com' : 'book.douban.com';
+    await this.opts.rateLimiter.acquireWrite(domain);
+
+    const params = new URLSearchParams();
+    params.set('ck', ck);
+
+    const url = `https://${domain}/j/subject/${id}/remove`;
+    const res = await this.http.post(url, params, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Referer': `https://${domain}/subject/${id}/`,
+        'Cookie': this.cookies.toHeader(),
+      },
+    }).catch((e: unknown) => {
+      const msg = e instanceof Error ? e.message : 'network error';
+      throw new NetworkError(msg);
+    });
+
+    if (res.status === 401 || res.status === 403) {
+      this.opts.rateLimiter.markCooldown(domain);
+      this.opts.rateLimiter.lockWriteForSession(domain);
+      throw new RateLimitError('unmark blocked by risk control');
+    }
+    if (res.status >= 400) throw new NetworkError(`HTTP ${res.status}`);
+
+    const ownUid = this.cookies.getOwnUid();
+    if (ownUid) this.opts.cache.invalidate(`html:getUserCollections:${ownUid}:${category}`);
+  }
 }
