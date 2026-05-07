@@ -22,3 +22,11 @@
   - (c) 把 Frodo 数据源升级为生产默认
 
 **追踪**：实施细节见 `src/datasources/HtmlDataSource.ts` 的 httpGet（M2.9 实现）。
+
+### 2. SSEServerTransport 在 MCP SDK v1.29 已 deprecated
+
+**发现于**：M6.4（2026-05-07）实现 SSE transport 时，IDE 提示 `'SSEServerTransport' is deprecated`
+
+**现状**：v1.29 的 SDK 标记 SSE 为 deprecated，推荐 `StreamableHTTPServerTransport`。当前 v1.0 仍按 spec 用 SSE（功能完整，向前兼容到 SDK 移除前）。
+
+**v1.x 计划**：迁移到 `StreamableHTTPServerTransport`，CLI 接口改成 `--transport http`（保留 `--transport sse` 作为 deprecated alias 一段时间）。文档同步更新。
