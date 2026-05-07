@@ -52,15 +52,12 @@ export class HtmlDataSource implements IDoubanDataSource {
 
   private async httpGet(url: string, opts: { domain: string; referer?: string } = { domain: 'movie.douban.com' }): Promise<string> {
     await this.opts.rateLimiter.acquireRead(opts.domain);
-    let res;
-    try {
-      res = await this.http.get<string>(url, {
-        headers: opts.referer ? { Referer: opts.referer } : {},
-      });
-    } catch (e: unknown) {
+    const res = await this.http.get<string>(url, {
+      headers: opts.referer ? { Referer: opts.referer } : {},
+    }).catch((e: unknown) => {
       const msg = e instanceof Error ? e.message : 'network error';
       throw new NetworkError(msg);
-    }
+    });
     if (res.status === 404) throw new NotFoundError(`404 at ${url}`);
     if (res.status === 401 || res.status === 403) {
       this.opts.rateLimiter.markCooldown(opts.domain);
