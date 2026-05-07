@@ -75,25 +75,6 @@ async function fetchPage(url: string, referer?: string): Promise<FetchResult> {
 let successCount = 0;
 let failCount = 0;
 
-async function savePage(url: string, savePath: string, referer?: string): Promise<boolean> {
-  console.log(`[fetch] ${url}`);
-  const result = await fetchPage(url, referer);
-
-  if (!result.ok || result.html.length < 5000) {
-    const reason = !result.ok
-      ? result.reason
-      : `HTML too small (${result.html.length} bytes, expected ≥ 5KB)`;
-    console.log(`[fail]  ${url} — ${reason}`);
-    failCount++;
-    return false;
-  }
-
-  mkdirSync(dirname(savePath), { recursive: true });
-  writeFileSync(savePath, result.html, 'utf-8');
-  console.log(`[ok]    ${savePath} (${result.html.length} bytes)`);
-  successCount++;
-  return true;
-}
 
 function extractUids(html: string): string[] {
   const BLOCKED = new Set(['mine', 'null', 'people', 'login', 'register', 'settings', 'logout']);
