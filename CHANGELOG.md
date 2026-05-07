@@ -4,7 +4,7 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ## [Unreleased]
 
-## [1.0.0] — TBD
+## [1.0.0] — 2026-05-07 (待发布)
 ### Added
 - Real MCP server (stdio + SSE) with 16 tools (12 read + 4 write)
 - Agent-native CLI with `--json` mode and standard exit codes
