@@ -1,12 +1,5 @@
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
 import { parseMovieDetail, parseMovieSearch, parseTop250 } from '../../../src/datasources/parsers/movie.js';
-
-// __dirname 在 ts-jest ESM 模式下不可用，用 resolve + process.cwd() 替代
-const fixturePath = (name: string) =>
-  resolve(process.cwd(), '__tests__', 'fixtures', name);
-
-const loadFixture = (name: string) => readFileSync(fixturePath(name), 'utf-8');
+import { loadFixture } from '../../helpers/loadFixture.js';
 
 describe('parseMovieDetail (Inception)', () => {
   const movie = parseMovieDetail(loadFixture('movie/inception.html'), '3541415');

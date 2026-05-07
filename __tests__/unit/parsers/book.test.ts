@@ -1,9 +1,5 @@
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
 import { parseBookDetail, parseBookSearch } from '../../../src/datasources/parsers/book.js';
-
-const loadFixture = (name: string) =>
-  readFileSync(resolve(process.cwd(), '__tests__', 'fixtures', name), 'utf-8');
+import { loadFixture } from '../../helpers/loadFixture.js';
 
 describe('parseBookDetail (三体)', () => {
   const book = parseBookDetail(loadFixture('book/three-body.html'), '2567698');

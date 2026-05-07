@@ -1,9 +1,8 @@
 import { readFileSync } from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { resolve } from 'path';
 
-const here = dirname(fileURLToPath(import.meta.url));
+const fixturesDir = resolve(process.cwd(), '__tests__', 'fixtures');
 
 export function loadFixture(relativePath: string): string {
-  return readFileSync(join(here, '..', 'fixtures', relativePath), 'utf-8');
+  return readFileSync(resolve(fixturesDir, relativePath), 'utf-8');
 }
