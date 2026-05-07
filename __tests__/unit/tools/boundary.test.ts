@@ -6,7 +6,7 @@ import {
 
 describe('withErrorBoundary', () => {
   it('wraps successful handler into MCP content shape', async () => {
-    const wrapped = withErrorBoundary(async () => 'hello');
+    const wrapped = withErrorBoundary(async () => ({ markdown: 'hello', data: null }));
     const r = await wrapped({});
     expect(r.content[0]).toEqual({ type: 'text', text: 'hello' });
     expect(r.isError).toBeUndefined();
@@ -20,14 +20,14 @@ describe('withErrorBoundary', () => {
     [WriteDisabledError, '写操作未启用'],
     [NetworkError, '网络错误'],
   ])('formats %s into a friendly markdown error', async (Cls: any, marker: string) => {
-    const wrapped = withErrorBoundary(async () => { throw new Cls('inner'); });
+    const wrapped = withErrorBoundary(async (): Promise<never> => { throw new Cls('inner'); });
     const r = await wrapped({});
     expect(r.isError).toBe(true);
     expect((r.content[0] as any).text).toContain(marker);
   });
 
   it('falls back to "未知错误" for unrelated Error', async () => {
-    const wrapped = withErrorBoundary(async () => { throw new Error('boom'); });
+    const wrapped = withErrorBoundary(async (): Promise<never> => { throw new Error('boom'); });
     const r = await wrapped({});
     expect(r.isError).toBe(true);
     expect((r.content[0] as any).text).toContain('未知错误');

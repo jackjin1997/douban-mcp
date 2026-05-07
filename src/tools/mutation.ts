@@ -32,7 +32,10 @@ function makeMark(ds: IDoubanDataSource, category: 'movie' | 'book'): ToolEntry 
         tags: args.tags,
         shareToFeed: args.shareToFeed,
       });
-      return formatMarkResult('mark', category, args.id);
+      return {
+        markdown: formatMarkResult('mark', category, args.id),
+        data: { ok: true, action: 'mark', category, id: args.id, status: args.status },
+      };
     },
   };
 }
@@ -49,7 +52,10 @@ function makeUnmark(ds: IDoubanDataSource, category: 'movie' | 'book'): ToolEntr
     annotations: { destructiveHint: true, title: `Unmark ${category}` },
     handler: async (args: { id: string }) => {
       await ds.unmarkSubject(category, args.id);
-      return formatMarkResult('unmark', category, args.id);
+      return {
+        markdown: formatMarkResult('unmark', category, args.id),
+        data: { ok: true, action: 'unmark', category, id: args.id },
+      };
     },
   };
 }

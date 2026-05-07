@@ -14,8 +14,10 @@ export function registerBookTools(ds: IDoubanDataSource): ToolEntry[] {
       }),
       readOnly: true, requiresAuth: false,
       annotations: { readOnlyHint: true, title: 'Search Books' },
-      handler: async ({ q, count }: { q: string; count: number }) =>
-        formatSubjectList(await ds.searchBook(q, count)),
+      handler: async ({ q, count }: { q: string; count: number }) => {
+        const data = await ds.searchBook(q, count);
+        return { markdown: formatSubjectList(data), data };
+      },
     },
     {
       id: 'get_book', cliName: 'get-book', mcpName: 'get_book',
@@ -23,8 +25,10 @@ export function registerBookTools(ds: IDoubanDataSource): ToolEntry[] {
       inputSchema: z.object({ id: z.string().regex(/^\d+$/, 'id 必须是数字字符串') }),
       readOnly: true, requiresAuth: false,
       annotations: { readOnlyHint: true, title: 'Get Book Detail' },
-      handler: async ({ id }: { id: string }) =>
-        formatBookDetail(await ds.getBook(id)),
+      handler: async ({ id }: { id: string }) => {
+        const data = await ds.getBook(id);
+        return { markdown: formatBookDetail(data), data };
+      },
     },
     {
       id: 'get_book_reviews', cliName: 'list-book-reviews', mcpName: 'get_book_reviews',
@@ -35,8 +39,10 @@ export function registerBookTools(ds: IDoubanDataSource): ToolEntry[] {
       }),
       readOnly: true, requiresAuth: false,
       annotations: { readOnlyHint: true, title: 'List Book Reviews' },
-      handler: async ({ id, count }: { id: string; count: number }) =>
-        formatReviews(await ds.getBookReviews(id, count)),
+      handler: async ({ id, count }: { id: string; count: number }) => {
+        const data = await ds.getBookReviews(id, count);
+        return { markdown: formatReviews(data), data };
+      },
     },
     {
       id: 'get_book_chart', cliName: 'book-chart', mcpName: 'get_book_chart',
@@ -47,8 +53,10 @@ export function registerBookTools(ds: IDoubanDataSource): ToolEntry[] {
       }),
       readOnly: true, requiresAuth: false,
       annotations: { readOnlyHint: true, title: 'Book Chart' },
-      handler: async ({ kind, count }: { kind: 'fiction' | 'non_fiction' | 'new'; count: number }) =>
-        formatSubjectList(await ds.getBookChart(kind, count)),
+      handler: async ({ kind, count }: { kind: 'fiction' | 'non_fiction' | 'new'; count: number }) => {
+        const data = await ds.getBookChart(kind, count);
+        return { markdown: formatSubjectList(data), data };
+      },
     },
   ];
 }

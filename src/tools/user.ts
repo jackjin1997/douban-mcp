@@ -32,10 +32,10 @@ export function registerUserTools(ds: IDoubanDataSource, opts: { cookie?: string
         status: 'wish' | 'do' | 'collect';
         start: number;
         count: number;
-      }) =>
-        formatCollections(
-          await ds.getUserCollections(args.uid ?? null, args.category, args.status, args.start, args.count),
-        ),
+      }) => {
+        const data = await ds.getUserCollections(args.uid ?? null, args.category, args.status, args.start, args.count);
+        return { markdown: formatCollections(data), data };
+      },
     },
     {
       id: 'get_user_doulist',
@@ -46,8 +46,10 @@ export function registerUserTools(ds: IDoubanDataSource, opts: { cookie?: string
       readOnly: true,
       requiresAuth: false,
       annotations: { readOnlyHint: true, title: 'User Doulists' },
-      handler: async (args: { uid?: string }) =>
-        formatDoulists(await ds.getUserDoulist(args.uid ?? null)),
+      handler: async (args: { uid?: string }) => {
+        const data = await ds.getUserDoulist(args.uid ?? null);
+        return { markdown: formatDoulists(data), data };
+      },
     },
     {
       id: 'get_user_profile',
@@ -58,8 +60,10 @@ export function registerUserTools(ds: IDoubanDataSource, opts: { cookie?: string
       readOnly: true,
       requiresAuth: false,
       annotations: { readOnlyHint: true, title: 'User Profile' },
-      handler: async (args: { uid?: string }) =>
-        formatProfile(await ds.getUserProfile(args.uid ?? null)),
+      handler: async (args: { uid?: string }) => {
+        const data = await ds.getUserProfile(args.uid ?? null);
+        return { markdown: formatProfile(data), data };
+      },
     },
   ];
 }

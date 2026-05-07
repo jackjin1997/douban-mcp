@@ -14,7 +14,8 @@ export function registerMetaTools(ds: IDoubanDataSource): ToolEntry[] {
     annotations: { readOnlyHint: true, title: 'Check Cookie' },
     handler: async () => {
       const me = await ds.getCurrentUser();
-      return me ? `✅ cookie 有效（用户：${me.name}, uid=${me.uid}）` : '❌ cookie 已失效';
+      const markdown = me ? `✅ cookie 有效（用户：${me.name}, uid=${me.uid}）` : '❌ cookie 已失效';
+      return { markdown, data: { valid: !!me, user: me } };
     },
   }];
 }

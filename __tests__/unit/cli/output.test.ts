@@ -1,15 +1,21 @@
 import { renderResult, renderError, exitCodeFor } from '../../../src/cli/output.js';
+import type { ToolResult } from '../../../src/tools/registry.js';
 import {
   AuthError, NotFoundError, RateLimitError, WriteDisabledError, ParseError, NetworkError,
 } from '../../../src/errors.js';
 
 describe('renderResult', () => {
-  it('human mode returns text as-is', () => {
-    expect(renderResult({ ok: true, text: 'hello' }, false)).toBe('hello');
+  it('human mode returns markdown', () => {
+    const r: ToolResult = { markdown: 'hello', data: null };
+    expect(renderResult(r, false)).toBe('hello');
   });
-  it('json mode prefers data, fallback to text', () => {
-    expect(renderResult({ ok: true, text: 'hello', data: [1, 2] }, true)).toBe('[1,2]');
-    expect(renderResult({ ok: true, text: 'hello' }, true)).toBe('"hello"');
+  it('json mode returns JSON-stringified data', () => {
+    const r: ToolResult = { markdown: 'human friendly', data: [1, 2, 3] };
+    expect(renderResult(r, true)).toBe('[1,2,3]');
+  });
+  it('json mode with null data returns "null"', () => {
+    const r: ToolResult = { markdown: 'x', data: null };
+    expect(renderResult(r, true)).toBe('null');
   });
 });
 

@@ -60,4 +60,10 @@ describe('CLI e2e', () => {
     const obj = JSON.parse(stdout);
     expect(obj.ok).toBe(true);
   });
+
+  it('describe with --json prints valid JSON', () => {
+    const { stdout, status } = run(['--json', 'describe', 'get-movie']);
+    expect(status).toBe(0);
+    expect(() => JSON.parse(stdout)).not.toThrow();
+  });
 });

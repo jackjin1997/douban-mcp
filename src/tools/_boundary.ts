@@ -1,11 +1,15 @@
 import { AuthError, NotFoundError, RateLimitError, ParseError, WriteDisabledError, NetworkError } from '../errors.js';
 import { logger } from '../utils/logger.js';
+import type { ToolResult } from './registry.js';
 
 type MCPResult = { content: { type: 'text'; text: string }[]; isError?: boolean };
 
-export function withErrorBoundary<TArgs>(handler: (args: TArgs) => Promise<string>) {
+export function withErrorBoundary<TArgs>(handler: (args: TArgs) => Promise<ToolResult>) {
   return async (args: TArgs): Promise<MCPResult> => {
-    try { return { content: [{ type: 'text', text: await handler(args) }] }; }
+    try {
+      const r = await handler(args);
+      return { content: [{ type: 'text', text: r.markdown }] };
+    }
     catch (e) {
       const msg = formatError(e);
       return { content: [{ type: 'text', text: msg }], isError: true };

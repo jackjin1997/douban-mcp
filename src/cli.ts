@@ -25,8 +25,8 @@ export async function runCli(argv: string[]): Promise<void> {
       const jsonMode = Boolean(program.opts().json);
       try {
         const args = parseZodOptions(command.opts(), tool.inputSchema);
-        const text = await tool.handler(args);
-        process.stdout.write(renderResult({ ok: true, text }, jsonMode) + '\n');
+        const result = await tool.handler(args);
+        process.stdout.write(renderResult(result, jsonMode) + '\n');
       } catch (e) {
         process.stdout.write(renderError(e, jsonMode) + '\n');
         process.exit(exitCodeFor(e));

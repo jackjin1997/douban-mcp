@@ -1,11 +1,10 @@
 import { AuthError, NotFoundError, RateLimitError, WriteDisabledError, ParseError, NetworkError } from '../errors.js';
 import { formatError, errorToCode } from '../tools/_boundary.js';
+import type { ToolResult } from '../tools/registry.js';
 
-export interface CliResult { ok: true; text: string; data?: unknown; }
-
-export function renderResult(r: CliResult, jsonMode: boolean): string {
-  if (jsonMode) return JSON.stringify(r.data ?? r.text);
-  return r.text;
+export function renderResult(r: ToolResult, jsonMode: boolean): string {
+  if (jsonMode) return JSON.stringify(r.data);
+  return r.markdown;
 }
 
 export function renderError(e: unknown, jsonMode: boolean): string {

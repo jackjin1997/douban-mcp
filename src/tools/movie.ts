@@ -17,8 +17,10 @@ export function registerMovieTools(ds: IDoubanDataSource): ToolEntry[] {
       readOnly: true,
       requiresAuth: false,
       annotations: { readOnlyHint: true, title: 'Search Movies' },
-      handler: async ({ q, count }: { q: string; count: number }) =>
-        formatSubjectList(await ds.searchMovie(q, count)),
+      handler: async ({ q, count }: { q: string; count: number }) => {
+        const data = await ds.searchMovie(q, count);
+        return { markdown: formatSubjectList(data), data };
+      },
     },
     {
       id: 'get_movie',
@@ -31,8 +33,10 @@ export function registerMovieTools(ds: IDoubanDataSource): ToolEntry[] {
       readOnly: true,
       requiresAuth: false,
       annotations: { readOnlyHint: true, title: 'Get Movie Detail' },
-      handler: async ({ id }: { id: string }) =>
-        formatMovieDetail(await ds.getMovie(id)),
+      handler: async ({ id }: { id: string }) => {
+        const data = await ds.getMovie(id);
+        return { markdown: formatMovieDetail(data), data };
+      },
     },
     {
       id: 'get_movie_reviews',
@@ -46,8 +50,10 @@ export function registerMovieTools(ds: IDoubanDataSource): ToolEntry[] {
       readOnly: true,
       requiresAuth: false,
       annotations: { readOnlyHint: true, title: 'List Movie Reviews' },
-      handler: async ({ id, count }: { id: string; count: number }) =>
-        formatReviews(await ds.getMovieReviews(id, count)),
+      handler: async ({ id, count }: { id: string; count: number }) => {
+        const data = await ds.getMovieReviews(id, count);
+        return { markdown: formatReviews(data), data };
+      },
     },
     {
       id: 'get_movie_chart',
@@ -62,8 +68,10 @@ export function registerMovieTools(ds: IDoubanDataSource): ToolEntry[] {
       readOnly: true,
       requiresAuth: false,
       annotations: { readOnlyHint: true, title: 'Movie Chart' },
-      handler: async ({ kind, start, count }: { kind: 'top250' | 'weekly' | 'new'; start: number; count: number }) =>
-        formatSubjectList(await ds.getMovieChart(kind, start, count)),
+      handler: async ({ kind, start, count }: { kind: 'top250' | 'weekly' | 'new'; start: number; count: number }) => {
+        const data = await ds.getMovieChart(kind, start, count);
+        return { markdown: formatSubjectList(data), data };
+      },
     },
   ];
 }

@@ -6,6 +6,11 @@ import { registerBookTools } from './book.js';
 import { registerUserTools } from './user.js';
 import { registerMutationTools } from './mutation.js';
 
+export interface ToolResult {
+  markdown: string;
+  data: unknown;
+}
+
 export interface ToolEntry {
   id: string;
   cliName: string;
@@ -15,7 +20,7 @@ export interface ToolEntry {
   readOnly: boolean;
   requiresAuth: boolean;
   annotations?: { readOnlyHint?: boolean; destructiveHint?: boolean; title?: string };
-  handler: (args: any) => Promise<string>;
+  handler: (args: any) => Promise<ToolResult>;
 }
 
 export interface RegistryOpts {
