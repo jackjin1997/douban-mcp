@@ -1,5 +1,5 @@
 import * as cheerio from 'cheerio';
-import type { BookDetail, SubjectSummary } from '../types.js';
+import type { BookDetail, SubjectSummary, Review } from '../types.js';
 import { ParseError } from '../../errors.js';
 
 /**
@@ -141,6 +141,26 @@ export function parseBookSearch(html: string): SubjectSummary[] {
       url,
       rating: parseFloat($(el).find('.rating_nums').first().text()) || undefined,
       cover: $(el).find('img').attr('src') || undefined,
+    });
+  });
+  return out;
+}
+
+export function parseBookReviewsFromHtml(html: string): Review[] {
+  const $ = cheerio.load(html);
+  const out: Review[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  $('.comment-item').each((_: any, el: any) => {
+    const author = $(el).find('.comment-info a').first();
+    const ratingClass = $(el).find('.user-stars').attr('class') ?? '';
+    const ratingMatch = ratingClass.match(/allstar(\d)0/);
+    out.push({
+      author: author.text().trim(),
+      authorUid: (author.attr('href') ?? '').match(/\/people\/([^/]+)/)?.[1] ?? '',
+      rating: ratingMatch ? parseInt(ratingMatch[1], 10) : undefined,
+      content: $(el).find('.short').text().trim(),
+      publishedAt: $(el).find('.comment-time').attr('title') ?? $(el).find('.comment-time').text().trim(),
+      usefulCount: parseInt($(el).find('.vote-count').text(), 10) || 0,
     });
   });
   return out;

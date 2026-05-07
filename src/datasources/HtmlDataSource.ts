@@ -12,6 +12,7 @@ import { parseUserProfile } from './parsers/user.js';
 import {
   parseMovieDetail, parseMovieSearch, parseTop250, parseMovieReviewsFromHtml,
 } from './parsers/movie.js';
+import { parseBookDetail, parseBookSearch, parseBookReviewsFromHtml } from './parsers/book.js';
 
 export interface HtmlDataSourceOpts {
   cookie?: string;
@@ -129,10 +130,40 @@ export class HtmlDataSource implements IDoubanDataSource {
       return parseMovieSearch(html).slice(0, count);
     });
   }
-  searchBook(_q: string, _count: number): Promise<SubjectSummary[]> { return Promise.reject(new Error('NYI: M2.11')); }
-  getBook(_id: string): Promise<BookDetail> { return Promise.reject(new Error('NYI: M2.11')); }
-  getBookReviews(_id: string, _count: number): Promise<Review[]> { return Promise.reject(new Error('NYI: M2.11')); }
-  getBookChart(_kind: BookChartKind, _count: number): Promise<SubjectSummary[]> { return Promise.reject(new Error('NYI: M2.11')); }
+  async searchBook(q: string, count: number): Promise<SubjectSummary[]> {
+    const key = `html:searchBook:${q}:${count}`;
+    return this.opts.cache.wrap(key, 1800, async () => {
+      const url = `https://search.douban.com/book/subject_search?search_text=${encodeURIComponent(q)}`;
+      const html = await this.httpGet(url, { domain: 'search.douban.com' });
+      return parseBookSearch(html).slice(0, count);
+    });
+  }
+
+  async getBook(id: string): Promise<BookDetail> {
+    const key = `html:getBook:${id}`;
+    return this.opts.cache.wrap(key, 21600, async () => {
+      const html = await this.httpGet(`https://book.douban.com/subject/${id}/`, { domain: 'book.douban.com' });
+      return parseBookDetail(html, id);
+    });
+  }
+
+  async getBookReviews(id: string, count: number): Promise<Review[]> {
+    const key = `html:getBookReviews:${id}:${count}`;
+    return this.opts.cache.wrap(key, 1800, async () => {
+      const html = await this.httpGet(`https://book.douban.com/subject/${id}/comments/`, { domain: 'book.douban.com' });
+      return parseBookReviewsFromHtml(html).slice(0, count);
+    });
+  }
+
+  async getBookChart(kind: BookChartKind, count: number): Promise<SubjectSummary[]> {
+    const key = `html:getBookChart:${kind}:${count}`;
+    return this.opts.cache.wrap(key, 3600, async () => {
+      const tag = kind === 'fiction' ? '小说' : kind === 'non_fiction' ? '随笔' : '新书';
+      const url = `https://book.douban.com/tag/${encodeURIComponent(tag)}`;
+      const html = await this.httpGet(url, { domain: 'book.douban.com' });
+      return parseBookSearch(html).slice(0, count);
+    });
+  }
   getUserCollections(_uid: string | null, _category: 'movie' | 'book', _status: CollectionStatus, _start: number, _count: number): Promise<Collection[]> { return Promise.reject(new Error('NYI: M2.12')); }
   getUserDoulist(_uid: string | null): Promise<Doulist[]> { return Promise.reject(new Error('NYI: M2.12')); }
   getUserProfile(_uid: string | null): Promise<UserProfile> { return Promise.reject(new Error('NYI: M2.12')); }
