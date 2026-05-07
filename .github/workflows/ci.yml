@@ -14,3 +14,5 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
       - run: pnpm test --coverage
+      - run: pnpm build:skill-md
+      - run: git diff --exit-code skills/
