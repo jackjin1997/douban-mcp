@@ -1,10 +1,12 @@
 # douban-mcp 🎬 📕
 
-[![npm](https://img.shields.io/npm/v/douban-mcp.svg)](https://www.npmjs.com/package/douban-mcp)
+[![npm](https://img.shields.io/npm/v/douban-mcp-cli.svg)](https://www.npmjs.com/package/douban-mcp-cli)
 [![CI](https://github.com/jackjin1997/douban-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/jackjin1997/douban-mcp/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **面向 agent 的豆瓣 MCP 服务 + CLI**。同一个包既能做 Claude Desktop 的 MCP server（stdio/SSE），又能给 Claude Code/OpenClaw 等 agent 直接当 CLI 用。
+
+> npm 包名为 `douban-mcp-cli`（裸名 `douban-mcp` 在 npm 已被他人占用）；GitHub 仓库 / 产品名仍为 `douban-mcp`。
 
 ## ✨ 特性
 
@@ -28,7 +30,7 @@
   "mcpServers": {
     "douban": {
       "command": "npx",
-      "args": ["-y", "douban-mcp", "serve"],
+      "args": ["-y", "douban-mcp-cli", "serve"],
       "env": { "DOUBAN_COOKIE": "你的cookie（可选）" }
     }
   }
@@ -38,9 +40,9 @@
 ### CLI（任何 agent / 命令行）
 
 ```bash
-npx -y douban-mcp search-movie --q "盗梦空间" --count 3
-npx -y douban-mcp get-movie --id 3541415
-npx -y douban-mcp --json movie-chart --kind top250 --count 5 | jq
+npx -y douban-mcp-cli search-movie --q "盗梦空间" --count 3
+npx -y douban-mcp-cli get-movie --id 3541415
+npx -y douban-mcp-cli --json movie-chart --kind top250 --count 5 | jq
 ```
 
 启用写操作：
@@ -48,7 +50,7 @@ npx -y douban-mcp --json movie-chart --kind top250 --count 5 | jq
 ```bash
 export DOUBAN_COOKIE="bid=...; dbcl2=\"...\"; ck=...; ll=\"108288\""
 export DOUBAN_ENABLE_WRITE=true
-npx -y douban-mcp mark-movie --id 3541415 --status collect --rating 5
+npx -y douban-mcp-cli mark-movie --id 3541415 --status collect --rating 5
 ```
 
 > ⚠️ 写操作有触发风控/封号风险。建议先用小号验证；本项目对账号安全不承担责任。
@@ -117,7 +119,7 @@ v1.0 实测：**search-* 和 movie-chart top250 等聚合页匿名可用**；但
 ## 🔧 SSE 模式
 
 ```bash
-npx -y douban-mcp serve --transport sse --port 3000
+npx -y douban-mcp-cli serve --transport sse --port 3000
 # 然后在 MCP 客户端连接 http://localhost:3000/sse
 ```
 
@@ -125,12 +127,12 @@ npx -y douban-mcp serve --transport sse --port 3000
 
 ```bash
 # 用 mcp-inspector 一键调试
-npx @modelcontextprotocol/inspector npx -y douban-mcp serve
+npx @modelcontextprotocol/inspector npx -y douban-mcp-cli serve
 
 # 直接命令行调用任何工具（agent 也用这种方式）
-npx -y douban-mcp list-tools
-npx -y douban-mcp describe search-movie
-npx -y douban-mcp doctor
+npx -y douban-mcp-cli list-tools
+npx -y douban-mcp-cli describe search-movie
+npx -y douban-mcp-cli doctor
 ```
 
 ## 🛡️ 免责声明

@@ -1,9 +1,9 @@
 {
-  "name": "douban-mcp",
+  "name": "douban-mcp-cli",
   "version": "1.0.0-alpha.0",
-  "description": "Douban MCP server + agent-native CLI for movies, books, and personal collections",
+  "description": "Douban MCP server + agent-native CLI for movies, books, and personal collections (npm name: douban-mcp-cli; product: douban-mcp)",
   "main": "dist/index.js",
-  "bin": { "douban-mcp": "dist/index.js" },
+  "bin": { "douban-mcp-cli": "dist/index.js" },
   "files": ["dist", "skills", "examples", "README.md", "LICENSE", "CHANGELOG.md"],
   "type": "module",
   "engines": { "node": ">=20" },

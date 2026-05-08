@@ -12,7 +12,7 @@ export async function runCli(argv: string[]): Promise<void> {
 
   const program = new Command();
   program
-    .name('douban-mcp')
+    .name('douban-mcp-cli')
     .description('Douban MCP server + agent-native CLI')
     .version('1.0.0-alpha.0')
     .option('--json', 'output structured JSON (for agent parsing)');

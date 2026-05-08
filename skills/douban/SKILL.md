@@ -20,15 +20,15 @@ description: 豆瓣电影、图书查询与个人书单/影单管理。当用户
 ### 1. 搜索 → 详情
 
 ```bash
-douban-mcp --json search-movie --q "盗梦空间" --count 1 \
+douban-mcp-cli --json search-movie --q "盗梦空间" --count 1 \
   | jq -r '.[0].id' \
-  | xargs -I{} douban-mcp get-movie --id {}
+  | xargs -I{} douban-mcp-cli get-movie --id {}
 ```
 
 ### 2. 我的待看清单
 
 ```bash
-douban-mcp --json user-collections --uid <your-uid> --category movie --status wish
+douban-mcp-cli --json user-collections --uid <your-uid> --category movie --status wish
 ```
 
 如未配 cookie 或无 uid 报 AUTH_FAILED，提示用户：
@@ -38,9 +38,9 @@ douban-mcp --json user-collections --uid <your-uid> --category movie --status wi
 ### 3. 批量标记（需写权限）
 
 ```bash
-douban-mcp --json user-collections --category movie --status wish \
+douban-mcp-cli --json user-collections --category movie --status wish \
   | jq -r '.[] | select(.subject.rating > 8) | .subject.id' \
-  | xargs -I{} douban-mcp mark-movie --id {} --status collect --rating 5
+  | xargs -I{} douban-mcp-cli mark-movie --id {} --status collect --rating 5
 ```
 
 需 `DOUBAN_COOKIE` + `DOUBAN_ENABLE_WRITE=true`。
@@ -57,7 +57,7 @@ douban-mcp --json user-collections --category movie --status wish \
 
 ## 配置前置条件
 
-- 安装：`npm i -g douban-mcp` 或 `npx douban-mcp`
+- 安装：`npm i -g douban-mcp-cli` 或 `npx douban-mcp-cli`
 - 写操作：`export DOUBAN_COOKIE=...; export DOUBAN_ENABLE_WRITE=true`
 
 ## 可用命令（自动生成，勿手改）

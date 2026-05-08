@@ -3,7 +3,7 @@
     "douban": {
       "transport": "stdio",
       "command": "npx",
-      "args": ["-y", "douban-mcp", "serve"]
+      "args": ["-y", "douban-mcp-cli", "serve"]
     }
   }
 }

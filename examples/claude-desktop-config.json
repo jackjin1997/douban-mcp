@@ -2,7 +2,7 @@
   "mcpServers": {
     "douban": {
       "command": "npx",
-      "args": ["-y", "douban-mcp", "serve"],
+      "args": ["-y", "douban-mcp-cli", "serve"],
       "env": {
         "DOUBAN_COOKIE": "<your cookie here>",
         "DOUBAN_ENABLE_WRITE": "false",
