@@ -30,6 +30,18 @@ describe('HtmlDataSource.httpGet (via __probe)', () => {
       .rejects.toBeInstanceOf(RateLimitError);
   });
 
+  it('throws RateLimitError when redirected to sec.douban.com (real-world variant)', async () => {
+    // 实测：豆瓣详情页风控会重定向到 sec.douban.com/c?r=...，返回简单 HTML 但无 captchaToken
+    mockedAxios.get.mockResolvedValue({
+      status: 200,
+      data: '<html><body><div>豆瓣安全检查</div></body></html>',
+      request: { res: { responseUrl: 'https://sec.douban.com/c?r=https%3A%2F%2Fmovie.douban.com%2Fsubject%2F1%2F' } },
+    });
+    const ds = makeDS();
+    await expect((ds as any).__probe('https://movie.douban.com/subject/1/'))
+      .rejects.toBeInstanceOf(RateLimitError);
+  });
+
   it('throws RateLimitError on PoW challenge HTML signature', async () => {
     // 豆瓣 PoW 挑战页通常是约 3KB 包含 challenge / verifyToken / window.captchaToken 的 JS
     const challengeHtml = '<html><script>window.captchaToken="x"; var challenge="...";</script></html>';

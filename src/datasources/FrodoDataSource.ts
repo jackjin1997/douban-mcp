@@ -78,6 +78,16 @@ export class FrodoDataSource implements IDoubanDataSource {
       this.opts.rateLimiter.markCooldown(domain);
       throw new RateLimitError(`frodo ${res.status} ${path}`);
     }
+    // 豆瓣 Frodo 在 v1.0 spec 写完后强制要求请求签名（除 apikey 外）。
+    // 收到 invalid_request_997 (签名缺失) 时给出清晰错误而非返回空字段。
+    if (res.status === 400 && typeof res.data === 'object' && res.data !== null) {
+      const d = res.data as { code?: number; msg?: string; localized_message?: string };
+      if (d.code === 997 || d.msg === 'invalid_request_997') {
+        throw new AuthError(
+          'Frodo API 现在要求请求签名（v1.0 不支持，需逆向 douban Android app 算法）。请改用默认 DOUBAN_DATA_SOURCE=html 模式。'
+        );
+      }
+    }
     return res.data;
   }
 

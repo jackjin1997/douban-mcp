@@ -24,6 +24,20 @@ describe('FrodoDataSource.getCurrentUser', () => {
   });
 });
 
+describe('FrodoDataSource invalid_request_997 (signature missing)', () => {
+  beforeEach(() => mockedAxios.get.mockReset());
+
+  it('throws AuthError when frodo returns invalid_request_997', async () => {
+    const { AuthError } = await import('../../../src/errors.js');
+    mockedAxios.get.mockResolvedValue({
+      status: 400,
+      data: { request: 'GET /v2/movie/1', msg: 'invalid_request_997', code: 997, localized_message: '签名缺失' },
+    });
+    const ds = makeDS();
+    await expect(ds.searchMovie('test', 5)).rejects.toBeInstanceOf(AuthError);
+  });
+});
+
 describe('FrodoDataSource.searchMovie', () => {
   beforeEach(() => mockedAxios.get.mockReset());
 

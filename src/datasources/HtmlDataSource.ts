@@ -24,8 +24,12 @@ export interface HtmlDataSourceOpts {
 
 const DEFAULT_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 
-// 豆瓣 PoW 挑战页通常很短（< 5KB），含 captchaToken / challenge / verifyToken
+// 豆瓣风控页面识别：
+// - 重定向到 sec.douban.com 域（短简单 HTML，无明显 token）
+// - URL 含 /sec/captcha
+// - 短页面（<5KB）含 captchaToken/verifyToken/window.captcha
 function isPowChallenge(html: string, finalUrl: string): boolean {
+  if (finalUrl.includes('sec.douban.com')) return true;
   if (finalUrl.includes('/sec/captcha')) return true;
   if (typeof html === 'string' && html.length < 5000) {
     if (/captchaToken|verifyToken|window\.captcha/.test(html)) return true;

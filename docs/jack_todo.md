@@ -1,5 +1,29 @@
 # douban-mcp 待办与已知问题
 
+## 🔴 v1.0 阻塞级（实测 2026-05-08 发现）
+
+### 4. Frodo API 已强制要求签名（apikey 不再够）
+
+**实测**：`GET https://frodo.douban.com/api/v2/movie/<id>?apikey=...` 直接返回 `400 {code:997, msg:"invalid_request_997", localized_message:"签名缺失"}`。
+
+**意味着**：v1.0 的 `DOUBAN_DATA_SOURCE=frodo` 模式**对所有真实请求都是不可用的**。spec 设计时（基于公开反向 apikey）当时还能跑，豆瓣后端在某个时间点加了请求签名（类似小红书 x-s/x-t），signature 算法目前未公开逆向。
+
+**v1.0 缓解**：FrodoDataSource.get 检测到 `code:997` 时立即抛 AuthError，提示用户切到 html 模式。**用户期望从 Frodo 拿到稳定数据的功能已经事实上失效**。
+
+**v1.x 计划**：要么逆向 douban Android app 的请求签名算法（参考 xhs-mcp 用 Playwright 跑 JS），要么把 Frodo 模式从 v1.x 移除（接受 HTML+cookie 是唯一稳定路径）。
+
+### 5. 详情页风控劫持到 sec.douban.com（不带 cookie 必触发）
+
+**实测**：`GET https://movie.douban.com/subject/1291818/`（不带 cookie）会被 302 重定向到 `https://sec.douban.com/c?r=...`，返回 ~3KB 的"豆瓣安全检查"页（**不含 captchaToken**，因此原 PoW 检测器漏判，错归类为 PARSE_FAILED）。
+
+**v1.0 缓解（已修）**：`isPowChallenge` 现在识别 `sec.douban.com` 主机重定向，正确归类为 RateLimitError。错误消息提示用户配 cookie。
+
+**未解决**：v1.0 的 detail 页（get_movie / get_book / get_movie_reviews 等）**不带 cookie 几乎不可用**。Top250、search 等聚合页不会触发；详情页几乎必中。配 `DOUBAN_COOKIE` 后会带 session 通常可绕过——但本仓库没真实 cookie 的端到端验证，需用户实测。
+
+**v1.x 计划**：启动期 warm-up（模拟正常浏览访问 movie.douban.com 主页）建立 session cookie 后再发详情请求；或者文档明确"详情页需要 DOUBAN_COOKIE"。
+
+---
+
 ## 已知问题
 
 ### 1. 豆瓣 PoW (Proof-of-Work) 反爬挑战
