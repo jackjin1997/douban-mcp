@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "douban": {
+      "command": "npx",
+      "args": ["-y", "douban-mcp", "serve"],
+      "env": {
+        "DOUBAN_COOKIE": "<your cookie here>",
+        "DOUBAN_ENABLE_WRITE": "false",
+        "DOUBAN_DATA_SOURCE": "html"
+      }
+    },
+    "douban-sse": {
+      "url": "http://localhost:3000/sse"
+    }
+  }
+}
