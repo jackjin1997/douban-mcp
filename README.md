@@ -53,6 +53,18 @@ npx -y douban-mcp mark-movie --id 3541415 --status collect --rating 5
 
 > ⚠️ 写操作有触发风控/封号风险。建议先用小号验证；本项目对账号安全不承担责任。
 
+### ⚠️ 关于详情页必须配 cookie
+
+v1.0 实测：**search-* 和 movie-chart top250 等聚合页匿名可用**；但 `get-movie` / `get-book` / `get-*-reviews` 等详情页**会被豆瓣风控重定向到 `sec.douban.com`，必须配置 `DOUBAN_COOKIE` 才能稳定访问**。
+
+匿名模式下详情页会得到一条清晰错误：
+
+```
+⚠️ 豆瓣对该页面触发了风控（详情页常见）。请配置 DOUBAN_COOKIE 后重试。
+```
+
+> 注：原先设计的 `DOUBAN_DATA_SOURCE=frodo` 备用通道（豆瓣 App API）目前**已被服务端加签名要求拦截**（`invalid_request_997 签名缺失`），v1.0 不可用。详见 [`docs/jack_todo.md`](docs/jack_todo.md)。v1.x 计划做 cookie warm-up + 探索签名逆向。
+
 ## 🛠️ 工具清单
 
 ### 只读（默认全部可用）
