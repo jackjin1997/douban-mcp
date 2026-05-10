@@ -4,7 +4,10 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ## [Unreleased]
 
-## [1.0.0] — 2026-05-07 (待发布)
+## [1.0.0-alpha.0] — 2026-05-09
+
+> 📦 npm 包名为 `douban-mcp-cli`（裸名 `douban-mcp` 在 npm 已被他人占用）；GitHub 仓库 / 产品名仍为 `douban-mcp`。安装命令：`npm i douban-mcp-cli` 或 `npx -y douban-mcp-cli ...`。
+
 ### Added
 - Real MCP server (stdio + SSE) with 16 tools (12 read + 4 write)
 - Agent-native CLI with `--json` mode and standard exit codes
