@@ -15,6 +15,7 @@ jobs:
       - run: pnpm sync:version
       - run: git diff --exit-code src/version.ts
       - run: pnpm typecheck
+      - run: pnpm lint
       - run: pnpm test:coverage
       - run: pnpm build:skill-md
       - run: git diff --exit-code skills/

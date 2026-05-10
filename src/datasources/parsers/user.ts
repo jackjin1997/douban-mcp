@@ -77,7 +77,7 @@ export function parseUserProfile(html: string): UserProfile {
     const canon = $('link[rel="canonical"]').attr('href') ?? '';
     const og = $('meta[property="og:url"]').attr('content') ?? '';
     for (const c of [canon, og]) {
-      const m = c.match(/\/people\/([^\/]+)/);
+      const m = c.match(/\/people\/([^/]+)/);
       if (m) { uid = m[1]; break; }
     }
   }
@@ -87,7 +87,7 @@ export function parseUserProfile(html: string): UserProfile {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     $('a[href*="/people/"]').each((_: any, el: any) => {
       const href = $(el).attr('href') ?? '';
-      const m = href.match(/\/people\/([^\/]+)/);
+      const m = href.match(/\/people\/([^/]+)/);
       if (m && m[1] !== 'mine') counts.set(m[1], (counts.get(m[1]) ?? 0) + 1);
     });
     let max = 0;
