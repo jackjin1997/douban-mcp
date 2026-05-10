@@ -34,6 +34,19 @@ For HTML parsers: capture a real fixture first (`__tests__/fixtures/...`), then 
 
 ## Release
 
-- Bump `version` in package.json (semver)
-- Append section to `CHANGELOG.md`
-- Tag `vX.Y.Z` on main; release workflow publishes to npm
+- Bump `version` in `package.json` (semver) — single source of truth; `src/version.ts` reads from it at runtime, so MCP `serverInfo.version` and `cli --version` follow automatically
+- Append a section to `CHANGELOG.md` whose heading matches the version exactly (e.g. `## [1.0.0-alpha.0] — YYYY-MM-DD`)
+- Tag `vX.Y.Z` on main; pushing the tag triggers `.github/workflows/release.yml`
+
+### npm dist-tag mapping
+
+The release workflow auto-derives the npm dist-tag from the version string:
+
+| Version pattern | Example | Dist-tag | `npm i douban-mcp-cli` resolves to |
+|---|---|---|---|
+| `X.Y.Z` (stable) | `1.0.0`, `1.2.3` | `latest` | this version |
+| `X.Y.Z-alpha.N` | `1.0.0-alpha.0` | `alpha` | last published stable (or nothing if none) |
+| `X.Y.Z-beta.N` | `1.1.0-beta.2` | `beta` | last published stable |
+| `X.Y.Z-rc.N` | `2.0.0-rc.1` | `rc` | last published stable |
+
+Users opt into a prerelease channel explicitly: `npm i douban-mcp-cli@alpha`.

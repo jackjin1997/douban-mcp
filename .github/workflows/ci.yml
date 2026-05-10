@@ -12,6 +12,8 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 20, cache: pnpm }
       - run: pnpm install --frozen-lockfile
+      - run: pnpm sync:version
+      - run: git diff --exit-code src/version.ts
       - run: pnpm typecheck
       - run: pnpm test:coverage
       - run: pnpm build:skill-md

@@ -18,9 +18,25 @@ jobs:
       - run: pnpm build:skill-md
       - run: git diff --exit-code skills/
       - run: pnpm build
-      - run: pnpm publish --access public --no-git-checks --provenance
+      - name: Determine npm dist-tag from package.json version
+        id: dist_tag
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [[ "$VERSION" == *-* ]]; then
+            # Prerelease (e.g. 1.0.0-alpha.0 / 1.0.0-rc.1) → channel = first identifier after `-`
+            CHANNEL=$(printf '%s' "$VERSION" | sed -E 's/^[^-]+-([a-zA-Z]+).*$/\1/')
+          else
+            CHANNEL=latest
+          fi
+          echo "tag=$CHANNEL" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Publishing $VERSION to npm dist-tag '$CHANNEL'"
+      - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          DIST_TAG: ${{ steps.dist_tag.outputs.tag }}
+        run: pnpm publish --tag "$DIST_TAG" --access public --no-git-checks --provenance
       - uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
+          prerelease: ${{ steps.dist_tag.outputs.tag != 'latest' }}
