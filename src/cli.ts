@@ -3,6 +3,7 @@ import { createDataSource } from './datasources/factory.js';
 import { buildToolRegistry } from './tools/registry.js';
 import { applyZodOptions, parseZodOptions } from './cli/zodArgs.js';
 import { renderResult, renderError, exitCodeFor } from './cli/output.js';
+import { VERSION } from './version.js';
 
 export async function runCli(argv: string[]): Promise<void> {
   const cookie = process.env.DOUBAN_COOKIE;
@@ -14,7 +15,7 @@ export async function runCli(argv: string[]): Promise<void> {
   program
     .name('douban-mcp-cli')
     .description('Douban MCP server + agent-native CLI')
-    .version('1.0.0-alpha.0')
+    .version(VERSION)
     .option('--json', 'output structured JSON (for agent parsing)');
 
   // 派生子命令

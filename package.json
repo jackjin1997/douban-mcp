@@ -8,14 +8,16 @@
   "type": "module",
   "engines": { "node": ">=20" },
   "scripts": {
+    "sync:version": "node --import tsx scripts/sync-version.ts",
+    "build:skill-md": "node --import tsx scripts/build-skill-md.ts",
+    "prebuild": "pnpm sync:version",
     "build": "tsc",
     "dev": "node --import tsx src/index.ts",
     "lint": "eslint src __tests__",
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "test:coverage": "jest --coverage",
-    "build:skill-md": "node --import tsx scripts/build-skill-md.ts",
-    "prepublishOnly": "pnpm build"
+    "prepublishOnly": "pnpm sync:version && pnpm build"
   },
   "keywords": ["douban", "mcp", "model-context-protocol", "agent", "claude", "movies", "books"],
   "author": "JackJin",
