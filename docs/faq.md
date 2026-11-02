@@ -26,7 +26,7 @@ node dist/index.js serve --transport sse --port 3000
 
 - 确认 id 是数字字符串，不是 URL
 - 确认资源没被豆瓣删除（浏览器打开 `https://movie.douban.com/subject/<id>/` 验证）
-- 切换数据源试试：`DOUBAN_DATA_SOURCE=frodo`
+- 详情页频繁触发风控时，配置有效 `DOUBAN_COOKIE` 后重试
 
 ## Q6: 怎么贡献？
 
@@ -37,7 +37,7 @@ node dist/index.js serve --transport sse --port 3000
 
 ## Q7: 为什么 HTML 模式有时候返回空？
 
-豆瓣对纯 HTTP 触发 PoW（proof-of-work）挑战，特别是 `movie.douban.com/subject/<id>/` 这类详情页。当前 v1.0 的缓解是：撞挑战时抛 `RateLimitError` + 提示用户配 cookie 或切 Frodo。详见 `docs/jack_todo.md`。
+豆瓣对纯 HTTP 触发 PoW（proof-of-work）挑战，特别是 `movie.douban.com/subject/<id>/` 这类详情页。当前 v1.0 的缓解是：撞挑战时抛 `RateLimitError` + 提示用户配 cookie。Frodo 通道目前被服务端签名要求拦截，不再作为稳定兜底。详见 `docs/jack_todo.md`。
 
 ## Q8: 写操作触发"未启用"？
 

@@ -35,7 +35,7 @@
 **当前缓解（v1.0 采用 B 方案）**：
 - HtmlDataSource 仍用 axios（无浏览器开销）
 - 启动时尝试一次 warm-up 请求建立 cookie，后续请求复用 session
-- 撞挑战时抛 `RateLimitError` 并提示用户配置 `DOUBAN_COOKIE` 或切 `DOUBAN_DATA_SOURCE=frodo`
+- 撞挑战时抛 `RateLimitError` 并提示用户配置 `DOUBAN_COOKIE`
 
 **未解决的事**：
 - warm-up 不一定能 100% 绕过 PoW

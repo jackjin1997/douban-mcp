@@ -10,9 +10,9 @@
 
 ## ✨ 特性
 
-- ✅ 12 个只读工具（电影 / 图书 / 用户态 全覆盖）
+- ✅ 11 个匿名只读工具（电影 / 图书 / 用户态 全覆盖）+ 1 个登录态 cookie 自检工具
 - ✅ 4 个写工具（标记想看/在看/看过 + 打分 + 评论 + 标签），双模式 opt-in
-- ✅ 双数据源（HTML 默认 / Frodo API 可选），随时切换
+- ✅ HTML 数据源默认可用；Frodo API 代码保留为实验通道（真实请求目前被签名要求拦截）
 - ✅ MCP server (stdio + SSE) + agent native CLI（`--json` 模式）
 - ✅ Claude Code Skill 包随仓库交付
 - ✅ 内置缓存 + 限速 + 风控退避
@@ -110,8 +110,9 @@ v1.0 实测：**search-* 和 movie-chart top250 等聚合页匿名可用**；但
 |---|---|---|
 | `DOUBAN_COOKIE` | — | 登录态 cookie |
 | `DOUBAN_ENABLE_WRITE` | `false` | 启用写操作 |
-| `DOUBAN_DATA_SOURCE` | `html` | `html` / `frodo` |
-| `DOUBAN_FRODO_APIKEY` | 内置默认 | 覆盖 frodo apikey |
+| `DOUBAN_DATA_SOURCE` | `html` | `html`；`frodo` 仅实验用途 |
+| `DOUBAN_EXPERIMENTAL_FRODO` | `false` | 显式启用 Frodo 实验通道 |
+| `DOUBAN_FRODO_APIKEY` | 内置默认 | 覆盖 frodo apikey（仅实验通道） |
 | `DOUBAN_LOG_LEVEL` | `info` | debug/info/warn/error |
 | `DOUBAN_DISABLE_CACHE` | `false` | 关闭缓存（测试用） |
 | `DOUBAN_USER_AGENT` | 内置 Chrome UA | 覆盖默认 UA |

@@ -3,4 +3,8 @@ dist/
 coverage/
 .env
 *.log
-.DS_Store .playwright-mcp/
+.DS_Store
+.playwright-mcp/
+.claude/
+.claire/
+.gstack/

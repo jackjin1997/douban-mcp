@@ -1,6 +1,7 @@
 import { spawnSync } from 'child_process';
 import { resolve } from 'path';
 import { execSync } from 'child_process';
+import { readFileSync } from 'fs';
 
 const CLI = resolve('dist/index.js');
 
@@ -12,7 +13,7 @@ beforeAll(() => {
 function run(args: string[], env?: NodeJS.ProcessEnv) {
   return spawnSync('node', [CLI, ...args], {
     encoding: 'utf8',
-    env: { ...process.env, ...env },
+    env: { ...process.env, DOUBAN_DATA_SOURCE: 'html', ...env },
   });
 }
 
@@ -65,5 +66,18 @@ describe('CLI e2e', () => {
     const { stdout, status } = run(['--json', 'describe', 'get-movie']);
     expect(status).toBe(0);
     expect(() => JSON.parse(stdout)).not.toThrow();
+  });
+
+  it('--version matches package.json', () => {
+    const { stdout, status } = run(['--version']);
+    const pkg = JSON.parse(readFileSync(resolve('package.json'), 'utf8')) as { version: string };
+    expect(status).toBe(0);
+    expect(stdout.trim()).toBe(pkg.version);
+  });
+
+  it('frodo data source fails fast unless explicitly enabled', () => {
+    const result = run(['list-tools'], { DOUBAN_DATA_SOURCE: 'frodo', DOUBAN_EXPERIMENTAL_FRODO: 'false' });
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('Frodo API');
   });
 });

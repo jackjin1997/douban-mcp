@@ -77,7 +77,7 @@ export class HtmlDataSource implements IDoubanDataSource {
     if (isPowChallenge(body, finalUrl)) {
       this.opts.rateLimiter.markCooldown(opts.domain);
       throw new RateLimitError(
-        `豆瓣 PoW 挑战触发于 ${finalUrl}。建议设置 DOUBAN_COOKIE 或切到 DOUBAN_DATA_SOURCE=frodo。`
+        `豆瓣 PoW 挑战触发于 ${finalUrl}。建议设置 DOUBAN_COOKIE 后重试。`
       );
     }
     return res.data as string;

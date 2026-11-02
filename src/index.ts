@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 import 'dotenv/config';
+import { DoubanError } from './errors.js';
+import { formatError } from './tools/_boundary.js';
 
 async function main() {
   const arg = process.argv[2];
@@ -12,6 +14,10 @@ async function main() {
 }
 
 main().catch(err => {
+  if (err instanceof DoubanError) {
+    console.error(formatError(err));
+    process.exit(1);
+  }
   console.error('fatal', err);
   process.exit(1);
 });
