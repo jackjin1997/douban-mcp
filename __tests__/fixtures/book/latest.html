@@ -1,0 +1,1598 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans" class="ua-mac ua-webkit book-new-nav">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>
+新书速递
+</title>
+  <script>
+!function(doc){
+
+var setCookie = function(dict, days, path) {
+  var date = new Date(), expires, key;
+  days = days || 30;
+  path = path || '/';
+  date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+  expires = '; expires=' + date.toGMTString();
+  for (key in dict){
+    doc.cookie = key + '=' + dict[key] + expires + '; path=' + path;
+  }
+},
+
+getCookie = function(name) {
+  var na = name + '=', c, i, len, ca = doc.cookie.split(';');
+  for (i = 0, len = ca.length; i < len; i++) {
+    c = ca[i].replace(/^\s+|\s+$/g, '');
+    if (c.indexOf(na) == 0) {
+      return c.substring(na.length, c.length).replace(/\"/g, '');
+    }
+  }
+  return null;
+},
+
+origWrite = doc.write,
+
+whiteList = {
+  'douban.com': 1,
+  'douban.fm': 1,
+  'google.com': 1,
+  'google.cn': 1,
+  'googleapis.com': 1,
+  'gmaptiles.co.kr': 1,
+  'gstatic.com': 1,
+  'gstatic.cn': 1,
+  'google-analytics.com': 1,
+  'googleadservices.com': 1
+},
+
+report = function(reason, env) {
+  var img = new Image();
+  img.onload = function(){};
+  img.src = 'https://www.douban.com/j/except_report?kind=ra022&reason='
+    + encodeURIComponent(reason)
+    + '&environment=' + encodeURIComponent(env);
+},
+
+write = function(value) {
+  try {
+    origWrite.call(doc, value);
+  } catch (_e) {
+    origWrite(value);
+  }
+},
+
+_RE_SCRIPTS = /<script.*?src\=["']?([^"'\s>]+)/ig,
+_RE_DOMAIN = /http:\/\/(.+?)\.([^\/]+).+/i;
+
+doc.writeln = doc.write = function(value) {
+  var fileUrl = _RE_SCRIPTS.exec(value), fileDomain;
+
+  // 若不是打印script跳过
+  if (!fileUrl) {
+    write(value);
+    return;
+  }
+
+  // 若是本地地址跳过
+  fileDomain = _RE_DOMAIN.exec(fileUrl[1]);
+  if (!fileDomain) {
+    write(value);
+    return;
+  }
+
+  // 白名单域下文件跳过
+  if (whiteList[fileDomain[2]]) {
+    write(value);
+    return;
+  }
+
+  if (getCookie('hj') === 'tqs') {
+    return;
+  }
+
+  // 被劫持状态
+  report(fileUrl[1], location.href);
+
+  // 保存状态并自动刷新页面
+  setCookie({'hj': 'tqs'}, 1);
+  setTimeout(function() {
+    location.replace(location.href);
+  }, 50);
+};
+
+}(document);
+</script>
+
+  
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="Sun, 6 Mar 2005 01:00:00 GMT">
+  <meta name="referrer" content="always">
+  <meta name="renderer" content="webkit">
+  
+  <script>var _head_start = new Date();</script>
+  
+  <link href="https://img3.doubanio.com/f/vendors/fae7e145bf16b2f427ba0fe7ef3d47c04af3a6c0/css/douban.css" rel="stylesheet" type="text/css">
+  <link href="https://asset.doubanio.com/cuphead/book-static/common/master.6198c.css" rel="stylesheet" type="text/css">
+
+  <link href="https://asset.doubanio.com/cuphead/book-static/base/init.e399f.css" rel="stylesheet">
+  <style type="text/css"></style>
+  <script src="https://img3.doubanio.com/f/vendors/0511abe9863c2ea7084efa7e24d1d86c5b3974f1/js/jquery-1.10.2.min.js"></script>
+  <script src="https://img3.doubanio.com/f/vendors/e258329ca4b2122b4efe53fddc418967441e0e7f/js/douban.js"></script>
+  <script src="https://asset.doubanio.com/cuphead/book-static/common/master.ca055.js"></script>
+  
+
+  
+    <link href="https://asset.doubanio.com/cuphead/book-static/other/book_chart.b3153.css" rel="stylesheet"/>
+    <link href="https://asset.doubanio.com/cuphead/book-static/other/rank_and_tags.a70a3.css" rel="stylesheet"/>
+
+  <script>  </script>
+  <!-- COLLECTED CSS -->
+
+  <link rel="shortcut icon" href="https://img3.doubanio.com/favicon.ico" type="image/x-icon">
+</head>
+<body>
+  
+    <script>var _body_start = new Date();</script>
+    
+  
+
+
+
+    <link href="//asset.doubanio.com/cuphead/nav/2.0.0/shire/bundle.css" rel="stylesheet" type="text/css">
+
+
+
+<div id="db-global-nav" class="global-nav">
+  <div class="bd">
+    
+<div class="top-nav-info">
+  <a href="https://accounts.douban.com/passport/login?source=book" class="nav-login" rel="nofollow">登录/注册</a>
+</div>
+
+
+    <div class="top-nav-doubanapp">
+  <a href="https://www.douban.com/doubanapp/app?channel=top-nav" class="lnk-doubanapp">下载豆瓣客户端</a>
+  <div id="doubanapp-tip">
+    <a href="https://www.douban.com/doubanapp/app?channel=qipao" class="tip-link">豆瓣 <span class="version">6.0</span> 全新发布</a>
+    <a href="javascript: void 0;" class="tip-close">×</a>
+  </div>
+  <div id="top-nav-appintro" class="more-items">
+    <p class="appintro-title">豆瓣</p>
+    <p class="qrcode">扫码直接下载</p>
+    <div class="download">
+      <a href="https://www.douban.com/doubanapp/redirect?channel=top-nav&direct_dl=1&download=iOS">iPhone</a>
+      <span>·</span>
+      <a href="https://www.douban.com/doubanapp/redirect?channel=top-nav&direct_dl=1&download=Android" class="download-android">Android</a>
+    </div>
+  </div>
+</div>
+
+    
+
+
+<div class="global-nav-items">
+  <ul>
+    <li class="">
+      <a href="https://www.douban.com" target="_blank" data-moreurl-dict="{&quot;from&quot;:&quot;top-nav-click-main&quot;,&quot;uid&quot;:&quot;0&quot;}">豆瓣</a>
+    </li>
+    <li class="on">
+      <a href="https://book.douban.com"  data-moreurl-dict="{&quot;from&quot;:&quot;top-nav-click-book&quot;,&quot;uid&quot;:&quot;0&quot;}">读书</a>
+    </li>
+    <li class="">
+      <a href="https://movie.douban.com" target="_blank" data-moreurl-dict="{&quot;from&quot;:&quot;top-nav-click-movie&quot;,&quot;uid&quot;:&quot;0&quot;}">电影</a>
+    </li>
+    <li class="">
+      <a href="https://music.douban.com" target="_blank" data-moreurl-dict="{&quot;from&quot;:&quot;top-nav-click-music&quot;,&quot;uid&quot;:&quot;0&quot;}">音乐</a>
+    </li>
+    <li class="">
+      <a href="https://www.douban.com/podcast/" target="_blank" data-moreurl-dict="{&quot;from&quot;:&quot;top-nav-click-podcast&quot;,&quot;uid&quot;:&quot;0&quot;}">播客</a>
+    </li>
+    <li class="">
+      <a href="https://www.douban.com/location" target="_blank" data-moreurl-dict="{&quot;from&quot;:&quot;top-nav-click-location&quot;,&quot;uid&quot;:&quot;0&quot;}">同城</a>
+    </li>
+    <li class="">
+      <a href="https://www.douban.com/group" target="_blank" data-moreurl-dict="{&quot;from&quot;:&quot;top-nav-click-group&quot;,&quot;uid&quot;:&quot;0&quot;}">小组</a>
+    </li>
+    <li class="">
+      <a href="https://read.douban.com&#47;?dcs=top-nav&amp;dcm=douban" target="_blank" data-moreurl-dict="{&quot;from&quot;:&quot;top-nav-click-read&quot;,&quot;uid&quot;:&quot;0&quot;}">阅读</a>
+    </li>
+    <li class="">
+      <a href="https://fm.douban.com&#47;?from_=shire_top_nav" target="_blank" data-moreurl-dict="{&quot;from&quot;:&quot;top-nav-click-fm&quot;,&quot;uid&quot;:&quot;0&quot;}">FM</a>
+    </li>
+    <li class="">
+      <a href="https://time.douban.com&#47;?dt_time_source=douban-web_top_nav" target="_blank" data-moreurl-dict="{&quot;from&quot;:&quot;top-nav-click-time&quot;,&quot;uid&quot;:&quot;0&quot;}">时间</a>
+    </li>
+    <li class="">
+      <a href="https://market.douban.com&#47;?utm_campaign=douban_top_nav&amp;utm_source=douban&amp;utm_medium=pc_web" target="_blank" data-moreurl-dict="{&quot;from&quot;:&quot;top-nav-click-market&quot;,&quot;uid&quot;:&quot;0&quot;}">豆品</a>
+    </li>
+  </ul>
+</div>
+
+  </div>
+</div>
+<script>
+  ;window._GLOBAL_NAV = {
+    DOUBAN_URL: "https://www.douban.com",
+    N_NEW_NOTIS: 0,
+    N_NEW_DOUMAIL: 0
+  };
+</script>
+
+
+
+    <script src="//asset.doubanio.com/cuphead/nav/2.0.0/shire/bundle.js" defer="defer"></script>
+
+
+
+
+  
+
+
+    <link href="//asset.doubanio.com/cuphead/nav/2.0.0/book/bundle.css" rel="stylesheet" type="text/css">
+
+
+
+
+<div id="db-nav-book" class="nav">
+  <div class="nav-wrap">
+  <div class="nav-primary">
+    <div class="nav-logo">
+      <a href="https:&#47;&#47;book.douban.com">豆瓣读书</a>
+    </div>
+    <div class="nav-search">
+      <form action="https:&#47;&#47;search.douban.com&#47;book/subject_search" method="get">
+        <fieldset>
+          <legend>搜索：</legend>
+          <label for="inp-query">
+          </label>
+          <div class="inp"><input id="inp-query" name="search_text" size="22" maxlength="60" placeholder="书名、作者、ISBN" value=""></div>
+          <div class="inp-btn"><input type="submit" value="搜索"></div>
+          <input type="hidden" name="cat" value="1001" />
+        </fieldset>
+      </form>
+    </div>
+  </div>
+  </div>
+  <div class="nav-secondary">
+    
+
+<div class="nav-items">
+  <ul>
+    <li    ><a href="https://book.douban.com/cart/"
+     >购书单</a>
+    </li>
+    <li    ><a href="https://read.douban.com/ebooks/?dcs=book-nav&dcm=douban"
+            target="_blank"
+     >电子图书</a>
+    </li>
+    <li    ><a href="https://book.douban.com/annual/2025/?fullscreen=1&dt_from=navigation"
+            target="_blank"
+     >2025年度榜单</a>
+    </li>
+    <li    ><a href="https://c9.douban.com/app/standbyme-2025/?autorotate=false&fullscreen=true&hidenav=true&monitor_screenshot=true&dt_from=web_navigation"
+            target="_blank"
+     >2025年度报告</a>
+    </li>
+  </ul>
+</div>
+
+    <a href="https://book.douban.com/annual/2025/?fullscreen=1&&dt_from=book_navigation" class="bookannual"></a>
+  </div>
+</div>
+
+<script id="suggResult" type="text/x-jquery-tmpl">
+  <li data-link="{{= url}}">
+            <a href="{{= url}}" onclick="moreurl(this, {from:'book_search_sugg', query:'{{= keyword }}', subject_id:'{{= id}}', i: '{{= index}}', type: '{{= type}}'})">
+            <img src="{{= pic}}" width="40" />
+            <div>
+                <em>{{= title}}</em>
+                {{if year}}
+                    <span>{{= year}}</span>
+                {{/if}}
+                <p>
+                {{if type == "b"}}
+                    {{= author_name}}
+                {{else type == "a" }}
+                    {{if en_name}}
+                        {{= en_name}}
+                    {{/if}}
+                {{/if}}
+                 </p>
+            </div>
+        </a>
+        </li>
+  </script>
+
+
+
+
+    <script src="//asset.doubanio.com/cuphead/nav/2.0.0/book/bundle.js" defer="defer"></script>
+
+
+
+
+    <div id="wrapper">
+        
+        
+  <div id="content">
+    
+<div class="page-header">
+    <h1>
+        豆瓣-新书速递
+    </h1>
+</div>
+
+    <div class="grid-16-8 clearfix">
+      
+      <div class="article">
+
+    
+    <div class="clear"></div>
+    <div class="xbar"><div>
+    
+            <span class="now"><span>全部</span></span>
+            <a href="?subcat=文学">文学</a>
+            <a href="?subcat=小说">小说</a>
+            <a href="?subcat=历史文化">历史文化</a>
+            <a href="?subcat=社会纪实">社会纪实</a>
+            <a href="?subcat=科学新知">科学新知</a>
+            <a href="?subcat=艺术设计">艺术设计</a>
+            <a href="?subcat=商业经管">商业经管</a>
+            <a href="?subcat=绘本漫画">绘本漫画</a>
+    </div></div>
+    <div class="clear"></div>
+
+    <ul class="chart-dashed-list">
+        
+        <li class="media clearfix">
+            <div class="media__img">
+                <a href="https://book.douban.com/subject/38522388/"><img class="subject-cover" align="left" src="https://img3.doubanio.com/view/subject/s/public/s35642992.jpg"/></a>
+            </div>
+            <div class="media__body">
+                <h2 class="clearfix">
+                    <a class="fleft" href="https://book.douban.com/subject/38522388/">何以近代：概念史视野下的千年变局</a>
+                </h2>
+                <p class="subject-abstract color-gray">
+                    李恭忠 / 2026-9 / 上海人民出版社 / 98.00元 / 平装
+                </p>
+                <p class="clearfix w250 subject-rating">
+                    <span class="allstar35 star-img fleft"></span>
+                    <span class="font-small fleft">7.4</span>
+                    <span class="fleft ml8 color-gray">(33人评价)</span>
+                </p>
+                <div class="subject-tags">
+                </div>
+                <div class="clearfix w250 color-gray fright buyinfo">
+                    
+  
+
+    <span class="buy-info">
+      <a href="https://book.douban.com/subject/38522388/buylinks">
+        纸质版 77.18元
+      </a>
+    </span>
+
+                    
+  <span class="cart-info">
+    
+  <span class="add2cartWidget ">
+      <a class="j  add2cart a_show_login" href="https://www.douban.com/accounts/passport/login?source=book" rel="nofollow">
+        <span>+ 加入购书单</span></a>
+  </span>
+  
+
+  </span>
+
+                    
+  
+
+                </div>
+            </div>
+        </li>
+        
+        <li class="media clearfix">
+            <div class="media__img">
+                <a href="https://book.douban.com/subject/38541645/"><img class="subject-cover" align="left" src="https://img3.doubanio.com/view/subject/s/public/s35604859.jpg"/></a>
+            </div>
+            <div class="media__body">
+                <h2 class="clearfix">
+                    <a class="fleft" href="https://book.douban.com/subject/38541645/">码头上的异乡人：一个家族肖像画</a>
+                </h2>
+                <p class="subject-abstract color-gray">
+                    [英] 欧大旭 / 2026-9 / 上海译文出版社 / 42 / 精装
+                </p>
+                <p class="clearfix w250 subject-rating">
+                    <span class="allstar45 star-img fleft"></span>
+                    <span class="font-small fleft">8.6</span>
+                    <span class="fleft ml8 color-gray">(121人评价)</span>
+                </p>
+                <div class="subject-tags">
+                </div>
+                <div class="clearfix w250 color-gray fright buyinfo">
+                    
+  
+
+    <span class="buy-info">
+      <a href="https://book.douban.com/subject/38541645/buylinks">
+        纸质版 23.90元
+      </a>
+    </span>
+
+                    
+  <span class="cart-info">
+    
+  <span class="add2cartWidget ">
+      <a class="j  add2cart a_show_login" href="https://www.douban.com/accounts/passport/login?source=book" rel="nofollow">
+        <span>+ 加入购书单</span></a>
+  </span>
+  
+
+  </span>
+
+                    
+  
+
+                </div>
+            </div>
+        </li>
+        
+        <li class="media clearfix">
+            <div class="media__img">
+                <a href="https://book.douban.com/subject/37434517/"><img class="subject-cover" align="left" src="https://img9.doubanio.com/view/subject/s/public/s35660096.jpg"/></a>
+            </div>
+            <div class="media__body">
+                <h2 class="clearfix">
+                    <a class="fleft" href="https://book.douban.com/subject/37434517/">素水</a>
+                </h2>
+                <p class="subject-abstract color-gray">
+                    [加]安妮·卡森 / 2026-11 / 花城出版社 / 79.00元 / 平装
+                </p>
+                <p class="clearfix w250 subject-rating">
+                    <span class="allstar00 star-img fleft"></span>
+                    <span class="font-small fleft"></span>
+                    <span class="fleft ml8 color-gray">(93人评价)</span>
+                </p>
+                <div class="subject-tags">
+                </div>
+                <div class="clearfix w250 color-gray fright buyinfo">
+                    
+  
+
+    <span class="buy-info">
+      <a href="https://book.douban.com/subject/37434517/buylinks">
+        纸质版 52.00元
+      </a>
+    </span>
+
+                    
+  <span class="cart-info">
+    
+  <span class="add2cartWidget ">
+      <a class="j  add2cart a_show_login" href="https://www.douban.com/accounts/passport/login?source=book" rel="nofollow">
+        <span>+ 加入购书单</span></a>
+  </span>
+  
+
+  </span>
+
+                    
+  
+
+                </div>
+            </div>
+        </li>
+        
+        <li class="media clearfix">
+            <div class="media__img">
+                <a href="https://book.douban.com/subject/38521378/"><img class="subject-cover" align="left" src="https://img3.doubanio.com/view/subject/s/public/s35669939.jpg"/></a>
+            </div>
+            <div class="media__body">
+                <h2 class="clearfix">
+                    <a class="fleft" href="https://book.douban.com/subject/38521378/">志怪：六朝志怪小说的诞生与发展</a>
+                </h2>
+                <p class="subject-abstract color-gray">
+                    [日] 佐野诚子 / 2026-10 / 上海古籍出版社 / 76.00元 / 精装
+                </p>
+                <p class="clearfix w250 subject-rating">
+                    <span class="allstar00 star-img fleft"></span>
+                    <span class="font-small fleft"></span>
+                    <span class="fleft ml8 color-gray">(1人评价)</span>
+                </p>
+                <div class="subject-tags">
+                </div>
+                <div class="clearfix w250 color-gray fright buyinfo">
+                    
+  
+
+    <span class="buy-info">
+      <a href="https://book.douban.com/subject/38521378/buylinks">
+        纸质版 70.68元
+      </a>
+    </span>
+
+                    
+  <span class="cart-info">
+    
+  <span class="add2cartWidget ">
+      <a class="j  add2cart a_show_login" href="https://www.douban.com/accounts/passport/login?source=book" rel="nofollow">
+        <span>+ 加入购书单</span></a>
+  </span>
+  
+
+  </span>
+
+                    
+  
+
+                </div>
+            </div>
+        </li>
+        
+        <li class="media clearfix">
+            <div class="media__img">
+                <a href="https://book.douban.com/subject/38570440/"><img class="subject-cover" align="left" src="https://img3.doubanio.com/view/subject/s/public/s35656649.jpg"/></a>
+            </div>
+            <div class="media__body">
+                <h2 class="clearfix">
+                    <a class="fleft" href="https://book.douban.com/subject/38570440/">拉维尼亚</a>
+                </h2>
+                <p class="subject-abstract color-gray">
+                    [美] 厄休拉·勒古恩 / 2026-10-30 / 上海译文出版社 / 79.00 / 平装
+                </p>
+                <p class="clearfix w250 subject-rating">
+                    <span class="allstar00 star-img fleft"></span>
+                    <span class="font-small fleft"></span>
+                    <span class="fleft ml8 color-gray">(7人评价)</span>
+                </p>
+                <div class="subject-tags">
+                </div>
+                <div class="clearfix w250 color-gray fright buyinfo">
+                    
+  
+
+    <span class="buy-info">
+      <a href="https://book.douban.com/subject/38570440/buylinks">
+        纸质版 43.90元
+      </a>
+    </span>
+
+                    
+  <span class="cart-info">
+    
+  <span class="add2cartWidget ">
+      <a class="j  add2cart a_show_login" href="https://www.douban.com/accounts/passport/login?source=book" rel="nofollow">
+        <span>+ 加入购书单</span></a>
+  </span>
+  
+
+  </span>
+
+                    
+  
+
+                </div>
+            </div>
+        </li>
+        
+        <li class="media clearfix">
+            <div class="media__img">
+                <a href="https://book.douban.com/subject/38615559/"><img class="subject-cover" align="left" src="https://img3.doubanio.com/view/subject/s/public/s35669519.jpg"/></a>
+            </div>
+            <div class="media__body">
+                <h2 class="clearfix">
+                    <a class="fleft" href="https://book.douban.com/subject/38615559/">请勿打扰：日常生活中的声音控制</a>
+                </h2>
+                <p class="subject-abstract color-gray">
+                    [美] 麦克·哈古德 / 2026-10 / 东方出版中心 / 79.80元 / 平装
+                </p>
+                <p class="clearfix w250 subject-rating">
+                    <span class="allstar00 star-img fleft"></span>
+                    <span class="font-small fleft"></span>
+                    <span class="fleft ml8 color-gray">(2人评价)</span>
+                </p>
+                <div class="subject-tags">
+                </div>
+                <div class="clearfix w250 color-gray fright buyinfo">
+                    
+  
+
+    <span class="buy-info">
+      <a href="https://book.douban.com/subject/38615559/buylinks">
+        纸质版 61.85元
+      </a>
+    </span>
+
+                    
+  <span class="cart-info">
+    
+  <span class="add2cartWidget ">
+      <a class="j  add2cart a_show_login" href="https://www.douban.com/accounts/passport/login?source=book" rel="nofollow">
+        <span>+ 加入购书单</span></a>
+  </span>
+  
+
+  </span>
+
+                    
+  
+
+                </div>
+            </div>
+        </li>
+        
+        <li class="media clearfix">
+            <div class="media__img">
+                <a href="https://book.douban.com/subject/38940929/"><img class="subject-cover" align="left" src="https://img3.doubanio.com/view/subject/s/public/s35662200.jpg"/></a>
+            </div>
+            <div class="media__body">
+                <h2 class="clearfix">
+                    <a class="fleft" href="https://book.douban.com/subject/38940929/">清季的革命团体：1894—1911</a>
+                </h2>
+                <p class="subject-abstract color-gray">
+                    张玉法 / 2026-11 / 广西师范大学出版社 / 98 / 精装
+                </p>
+                <p class="clearfix w250 subject-rating">
+                    <span class="allstar00 star-img fleft"></span>
+                    <span class="font-small fleft"></span>
+                    <span class="fleft ml8 color-gray">(2人评价)</span>
+                </p>
+                <div class="subject-tags">
+                </div>
+                <div class="clearfix w250 color-gray fright buyinfo">
+                    
+  
+
+    <span class="buy-info">
+      <a href="https://book.douban.com/subject/38940929/buylinks">
+        纸质版 49.00元
+      </a>
+    </span>
+
+                    
+  <span class="cart-info">
+    
+  <span class="add2cartWidget ">
+      <a class="j  add2cart a_show_login" href="https://www.douban.com/accounts/passport/login?source=book" rel="nofollow">
+        <span>+ 加入购书单</span></a>
+  </span>
+  
+
+  </span>
+
+                    
+  
+
+                </div>
+            </div>
+        </li>
+        
+        <li class="media clearfix">
+            <div class="media__img">
+                <a href="https://book.douban.com/subject/38553181/"><img class="subject-cover" align="left" src="https://img2.doubanio.com/view/subject/s/public/s35681011.jpg"/></a>
+            </div>
+            <div class="media__body">
+                <h2 class="clearfix">
+                    <a class="fleft" href="https://book.douban.com/subject/38553181/">布莱希特戏剧选</a>
+                </h2>
+                <p class="subject-abstract color-gray">
+                    [德] 贝尔托特·布莱希特 / 2026-10 / 商务印书馆 / 295 / 口袋本带函套
+                </p>
+                <p class="clearfix w250 subject-rating">
+                    <span class="allstar00 star-img fleft"></span>
+                    <span class="font-small fleft"></span>
+                    <span class="fleft ml8 color-gray">(0人评价)</span>
+                </p>
+                <div class="subject-tags">
+                </div>
+                <div class="clearfix w250 color-gray fright buyinfo">
+                    
+  
+
+    <span class="buy-info">
+      <a href="https://book.douban.com/subject/38553181/buylinks">
+        纸质版 236.00元
+      </a>
+    </span>
+
+                    
+  <span class="cart-info">
+    
+  <span class="add2cartWidget ">
+      <a class="j  add2cart a_show_login" href="https://www.douban.com/accounts/passport/login?source=book" rel="nofollow">
+        <span>+ 加入购书单</span></a>
+  </span>
+  
+
+  </span>
+
+                    
+  
+
+                </div>
+            </div>
+        </li>
+        
+        <li class="media clearfix">
+            <div class="media__img">
+                <a href="https://book.douban.com/subject/39011288/"><img class="subject-cover" align="left" src="https://img2.doubanio.com/view/subject/s/public/s35676141.jpg"/></a>
+            </div>
+            <div class="media__body">
+                <h2 class="clearfix">
+                    <a class="fleft" href="https://book.douban.com/subject/39011288/">轻舟渡海：明清社会经济史的对话、评论与追迹</a>
+                </h2>
+                <p class="subject-abstract color-gray">
+                    赵思渊 / 2026-11 / 广西师范大学出版社 / 69 / 精装
+                </p>
+                <p class="clearfix w250 subject-rating">
+                    <span class="allstar00 star-img fleft"></span>
+                    <span class="font-small fleft"></span>
+                    <span class="fleft ml8 color-gray">(0人评价)</span>
+                </p>
+                <div class="subject-tags">
+                </div>
+                <div class="clearfix w250 color-gray fright buyinfo">
+                    
+  
+
+    <span class="buy-info">
+      <a href="https://book.douban.com/subject/39011288/buylinks">
+        纸质版 34.50元
+      </a>
+    </span>
+
+                    
+  <span class="cart-info">
+    
+  <span class="add2cartWidget ">
+      <a class="j  add2cart a_show_login" href="https://www.douban.com/accounts/passport/login?source=book" rel="nofollow">
+        <span>+ 加入购书单</span></a>
+  </span>
+  
+
+  </span>
+
+                    
+  
+
+                </div>
+            </div>
+        </li>
+        
+        <li class="media clearfix">
+            <div class="media__img">
+                <a href="https://book.douban.com/subject/38686545/"><img class="subject-cover" align="left" src="https://img9.doubanio.com/view/subject/s/public/s35674524.jpg"/></a>
+            </div>
+            <div class="media__body">
+                <h2 class="clearfix">
+                    <a class="fleft" href="https://book.douban.com/subject/38686545/">美味的毒药</a>
+                </h2>
+                <p class="subject-abstract color-gray">
+                    [美]诺亚·怀特曼 / 2026-10 / 湖南文艺出版社 / 68,00 / 平装
+                </p>
+                <p class="clearfix w250 subject-rating">
+                    <span class="allstar00 star-img fleft"></span>
+                    <span class="font-small fleft"></span>
+                    <span class="fleft ml8 color-gray">(0人评价)</span>
+                </p>
+                <div class="subject-tags">
+                </div>
+                <div class="clearfix w250 color-gray fright buyinfo">
+                    
+  
+
+    <span class="buy-info">
+      <a href="https://book.douban.com/subject/38686545/buylinks">
+        纸质版 45.00元
+      </a>
+    </span>
+
+                    
+  <span class="cart-info">
+    
+  <span class="add2cartWidget ">
+      <a class="j  add2cart a_show_login" href="https://www.douban.com/accounts/passport/login?source=book" rel="nofollow">
+        <span>+ 加入购书单</span></a>
+  </span>
+  
+
+  </span>
+
+                    
+  
+
+                </div>
+            </div>
+        </li>
+        
+        <li class="media clearfix">
+            <div class="media__img">
+                <a href="https://book.douban.com/subject/38608107/"><img class="subject-cover" align="left" src="https://img3.doubanio.com/view/subject/s/public/s35662858.jpg"/></a>
+            </div>
+            <div class="media__body">
+                <h2 class="clearfix">
+                    <a class="fleft" href="https://book.douban.com/subject/38608107/">天地万物均可为剑：金庸的世界与江湖中人赖以生存的隐喻</a>
+                </h2>
+                <p class="subject-abstract color-gray">
+                    巫怀宇 / 2026-10-21 / 广西师范大学出版社 / 平装
+                </p>
+                <p class="clearfix w250 subject-rating">
+                    <span class="allstar00 star-img fleft"></span>
+                    <span class="font-small fleft"></span>
+                    <span class="fleft ml8 color-gray">(5人评价)</span>
+                </p>
+                <div class="subject-tags">
+                </div>
+                <div class="clearfix w250 color-gray fright buyinfo">
+                    
+  
+
+    <span class="buy-info">
+      <a href="https://book.douban.com/subject/38608107/buylinks">
+        纸质版 38.20元
+      </a>
+    </span>
+
+                    
+  <span class="cart-info">
+    
+  <span class="add2cartWidget ">
+      <a class="j  add2cart a_show_login" href="https://www.douban.com/accounts/passport/login?source=book" rel="nofollow">
+        <span>+ 加入购书单</span></a>
+  </span>
+  
+
+  </span>
+
+                    
+  
+
+                </div>
+            </div>
+        </li>
+        
+        <li class="media clearfix">
+            <div class="media__img">
+                <a href="https://book.douban.com/subject/38686393/"><img class="subject-cover" align="left" src="https://img9.doubanio.com/view/subject/s/public/s35671085.jpg"/></a>
+            </div>
+            <div class="media__body">
+                <h2 class="clearfix">
+                    <a class="fleft" href="https://book.douban.com/subject/38686393/">我偏爱生活的例外：辛波斯卡画传</a>
+                </h2>
+                <p class="subject-abstract color-gray">
+                    [波] 米哈乌·鲁西内克 / 2026-10 / 花城出版社 / 68.00元
+                </p>
+                <p class="clearfix w250 subject-rating">
+                    <span class="allstar45 star-img fleft"></span>
+                    <span class="font-small fleft">9.4</span>
+                    <span class="fleft ml8 color-gray">(10人评价)</span>
+                </p>
+                <div class="subject-tags">
+                </div>
+                <div class="clearfix w250 color-gray fright buyinfo">
+                    
+  
+
+    <span class="buy-info">
+      <a href="https://book.douban.com/subject/38686393/buylinks">
+        纸质版 53.00元
+      </a>
+    </span>
+
+                    
+  <span class="cart-info">
+    
+  <span class="add2cartWidget ">
+      <a class="j  add2cart a_show_login" href="https://www.douban.com/accounts/passport/login?source=book" rel="nofollow">
+        <span>+ 加入购书单</span></a>
+  </span>
+  
+
+  </span>
+
+                    
+  
+
+                </div>
+            </div>
+        </li>
+        
+        <li class="media clearfix">
+            <div class="media__img">
+                <a href="https://book.douban.com/subject/38555205/"><img class="subject-cover" align="left" src="https://img3.doubanio.com/view/subject/s/public/s35635940.jpg"/></a>
+            </div>
+            <div class="media__body">
+                <h2 class="clearfix">
+                    <a class="fleft" href="https://book.douban.com/subject/38555205/">中国娼妓史</a>
+                </h2>
+                <p class="subject-abstract color-gray">
+                    王书奴 / 2026-10 / 生活·读书·新知三联书店 / 60.00元 / 精装
+                </p>
+                <p class="clearfix w250 subject-rating">
+                    <span class="allstar00 star-img fleft"></span>
+                    <span class="font-small fleft"></span>
+                    <span class="fleft ml8 color-gray">(3人评价)</span>
+                </p>
+                <div class="subject-tags">
+                </div>
+                <div class="clearfix w250 color-gray fright buyinfo">
+                    
+  
+
+
+                    
+  <span class="cart-info">
+    
+  <span class="add2cartWidget ">
+      <a class="j  add2cart a_show_login" href="https://www.douban.com/accounts/passport/login?source=book" rel="nofollow">
+        <span>+ 加入购书单</span></a>
+  </span>
+  
+
+  </span>
+
+                    
+  
+
+                </div>
+            </div>
+        </li>
+        
+        <li class="media clearfix">
+            <div class="media__img">
+                <a href="https://book.douban.com/subject/38593398/"><img class="subject-cover" align="left" src="https://img9.doubanio.com/view/subject/s/public/s35589654.jpg"/></a>
+            </div>
+            <div class="media__body">
+                <h2 class="clearfix">
+                    <a class="fleft" href="https://book.douban.com/subject/38593398/">凝神时刻</a>
+                </h2>
+                <p class="subject-abstract color-gray">
+                    邓安庆 / 2026-10 / 浙江文艺出版社 / 52.00元 / 平装
+                </p>
+                <p class="clearfix w250 subject-rating">
+                    <span class="allstar45 star-img fleft"></span>
+                    <span class="font-small fleft">8.7</span>
+                    <span class="fleft ml8 color-gray">(120人评价)</span>
+                </p>
+                <div class="subject-tags">
+                </div>
+                <div class="clearfix w250 color-gray fright buyinfo">
+                    
+  
+
+    <span class="buy-info">
+      <a href="https://book.douban.com/subject/38593398/buylinks">
+        纸质版 41.30元
+      </a>
+    </span>
+
+                    
+  <span class="cart-info">
+    
+  <span class="add2cartWidget ">
+      <a class="j  add2cart a_show_login" href="https://www.douban.com/accounts/passport/login?source=book" rel="nofollow">
+        <span>+ 加入购书单</span></a>
+  </span>
+  
+
+  </span>
+
+                    
+  
+
+                </div>
+            </div>
+        </li>
+        
+        <li class="media clearfix">
+            <div class="media__img">
+                <a href="https://book.douban.com/subject/38616010/"><img class="subject-cover" align="left" src="https://img3.doubanio.com/view/subject/s/public/s35620277.jpg"/></a>
+            </div>
+            <div class="media__body">
+                <h2 class="clearfix">
+                    <a class="fleft" href="https://book.douban.com/subject/38616010/">墙</a>
+                </h2>
+                <p class="subject-abstract color-gray">
+                    [奥] 玛尔伦·豪斯霍费尔 / 2026-9 / 广西师范大学出版社 / 52 / 平装
+                </p>
+                <p class="clearfix w250 subject-rating">
+                    <span class="allstar50 star-img fleft"></span>
+                    <span class="font-small fleft">9.5</span>
+                    <span class="fleft ml8 color-gray">(24人评价)</span>
+                </p>
+                <div class="subject-tags">
+                </div>
+                <div class="clearfix w250 color-gray fright buyinfo">
+                    
+  
+
+    <span class="buy-info">
+      <a href="https://book.douban.com/subject/38616010/buylinks">
+        纸质版 40.50元
+      </a>
+    </span>
+
+                    
+  <span class="cart-info">
+    
+  <span class="add2cartWidget ">
+      <a class="j  add2cart a_show_login" href="https://www.douban.com/accounts/passport/login?source=book" rel="nofollow">
+        <span>+ 加入购书单</span></a>
+  </span>
+  
+
+  </span>
+
+                    
+  
+
+                </div>
+            </div>
+        </li>
+        
+        <li class="media clearfix">
+            <div class="media__img">
+                <a href="https://book.douban.com/subject/38999511/"><img class="subject-cover" align="left" src="https://img9.doubanio.com/view/subject/s/public/s35668154.jpg"/></a>
+            </div>
+            <div class="media__body">
+                <h2 class="clearfix">
+                    <a class="fleft" href="https://book.douban.com/subject/38999511/">随风远走</a>
+                </h2>
+                <p class="subject-abstract color-gray">
+                    阿来 / 2026-10 / 江苏凤凰文艺出版社 / 52.00元 / 平装
+                </p>
+                <p class="clearfix w250 subject-rating">
+                    <span class="allstar00 star-img fleft"></span>
+                    <span class="font-small fleft"></span>
+                    <span class="fleft ml8 color-gray">(4人评价)</span>
+                </p>
+                <div class="subject-tags">
+                </div>
+                <div class="clearfix w250 color-gray fright buyinfo">
+                    
+  
+
+    <span class="buy-info">
+      <a href="https://book.douban.com/subject/38999511/buylinks">
+        纸质版 40.50元
+      </a>
+    </span>
+
+                    
+  <span class="cart-info">
+    
+  <span class="add2cartWidget ">
+      <a class="j  add2cart a_show_login" href="https://www.douban.com/accounts/passport/login?source=book" rel="nofollow">
+        <span>+ 加入购书单</span></a>
+  </span>
+  
+
+  </span>
+
+                    
+  
+
+                </div>
+            </div>
+        </li>
+        
+        <li class="media clearfix">
+            <div class="media__img">
+                <a href="https://book.douban.com/subject/37455862/"><img class="subject-cover" align="left" src="https://img3.doubanio.com/view/subject/s/public/s35656780.jpg"/></a>
+            </div>
+            <div class="media__body">
+                <h2 class="clearfix">
+                    <a class="fleft" href="https://book.douban.com/subject/37455862/">涉过意识之流</a>
+                </h2>
+                <p class="subject-abstract color-gray">
+                    [荷] 杜布拉夫卡·乌格雷西奇 / 2026-11 / 云南人民出版社 / 64.00元 / 平装
+                </p>
+                <p class="clearfix w250 subject-rating">
+                    <span class="allstar00 star-img fleft"></span>
+                    <span class="font-small fleft"></span>
+                    <span class="fleft ml8 color-gray">(59人评价)</span>
+                </p>
+                <div class="subject-tags">
+                </div>
+                <div class="clearfix w250 color-gray fright buyinfo">
+                    
+  
+
+    <span class="buy-info">
+      <a href="https://book.douban.com/subject/37455862/buylinks">
+        纸质版 49.90元
+      </a>
+    </span>
+
+                    
+  <span class="cart-info">
+    
+  <span class="add2cartWidget ">
+      <a class="j  add2cart a_show_login" href="https://www.douban.com/accounts/passport/login?source=book" rel="nofollow">
+        <span>+ 加入购书单</span></a>
+  </span>
+  
+
+  </span>
+
+                    
+  
+
+                </div>
+            </div>
+        </li>
+        
+        <li class="media clearfix">
+            <div class="media__img">
+                <a href="https://book.douban.com/subject/38613720/"><img class="subject-cover" align="left" src="https://img3.doubanio.com/view/subject/s/public/s35635029.jpg"/></a>
+            </div>
+            <div class="media__body">
+                <h2 class="clearfix">
+                    <a class="fleft" href="https://book.douban.com/subject/38613720/">空地</a>
+                </h2>
+                <p class="subject-abstract color-gray">
+                    李颖迪 / 2026-10 / 文汇出版社 / 59.00 / 平装
+                </p>
+                <p class="clearfix w250 subject-rating">
+                    <span class="allstar40 star-img fleft"></span>
+                    <span class="font-small fleft">8.4</span>
+                    <span class="fleft ml8 color-gray">(152人评价)</span>
+                </p>
+                <div class="subject-tags">
+                </div>
+                <div class="clearfix w250 color-gray fright buyinfo">
+                    
+  
+
+    <span class="buy-info">
+      <a href="https://book.douban.com/subject/38613720/buylinks">
+        纸质版 29.50元
+      </a>
+    </span>
+
+                    
+  <span class="cart-info">
+    
+  <span class="add2cartWidget ">
+      <a class="j  add2cart a_show_login" href="https://www.douban.com/accounts/passport/login?source=book" rel="nofollow">
+        <span>+ 加入购书单</span></a>
+  </span>
+  
+
+  </span>
+
+                    
+  
+
+                </div>
+            </div>
+        </li>
+        
+        <li class="media clearfix">
+            <div class="media__img">
+                <a href="https://book.douban.com/subject/38929993/"><img class="subject-cover" align="left" src="https://img9.doubanio.com/view/subject/s/public/s35656396.jpg"/></a>
+            </div>
+            <div class="media__body">
+                <h2 class="clearfix">
+                    <a class="fleft" href="https://book.douban.com/subject/38929993/">闲暇时分的男人</a>
+                </h2>
+                <p class="subject-abstract color-gray">
+                    [加] 安妮·卡森 / 2026-10 / 四川人民出版社 / 58.00元 / 平装
+                </p>
+                <p class="clearfix w250 subject-rating">
+                    <span class="allstar45 star-img fleft"></span>
+                    <span class="font-small fleft">9.1</span>
+                    <span class="fleft ml8 color-gray">(106人评价)</span>
+                </p>
+                <div class="subject-tags">
+                </div>
+                <div class="clearfix w250 color-gray fright buyinfo">
+                    
+  
+
+    <span class="buy-info">
+      <a href="https://book.douban.com/subject/38929993/buylinks">
+        纸质版 45.00元
+      </a>
+    </span>
+
+                    
+  <span class="cart-info">
+    
+  <span class="add2cartWidget ">
+      <a class="j  add2cart a_show_login" href="https://www.douban.com/accounts/passport/login?source=book" rel="nofollow">
+        <span>+ 加入购书单</span></a>
+  </span>
+  
+
+  </span>
+
+                    
+  
+
+                </div>
+            </div>
+        </li>
+        
+        <li class="media clearfix last">
+            <div class="media__img">
+                <a href="https://book.douban.com/subject/38991222/"><img class="subject-cover" align="left" src="https://img3.doubanio.com/view/subject/s/public/s35663390.jpg"/></a>
+            </div>
+            <div class="media__body">
+                <h2 class="clearfix">
+                    <a class="fleft" href="https://book.douban.com/subject/38991222/">身体与命运：明代的相术</a>
+                </h2>
+                <p class="subject-abstract color-gray">
+                    王兴 / 2026-10 / 复旦大学出版社 / 89.00元 / 精装
+                </p>
+                <p class="clearfix w250 subject-rating">
+                    <span class="allstar00 star-img fleft"></span>
+                    <span class="font-small fleft"></span>
+                    <span class="fleft ml8 color-gray">(7人评价)</span>
+                </p>
+                <div class="subject-tags">
+                </div>
+                <div class="clearfix w250 color-gray fright buyinfo">
+                    
+  
+
+    <span class="buy-info">
+      <a href="https://book.douban.com/subject/38991222/buylinks">
+        纸质版 71.20元
+      </a>
+    </span>
+
+                    
+  <span class="cart-info">
+    
+  <span class="add2cartWidget ">
+      <a class="j  add2cart a_show_login" href="https://www.douban.com/accounts/passport/login?source=book" rel="nofollow">
+        <span>+ 加入购书单</span></a>
+  </span>
+  
+
+  </span>
+
+                    
+  
+
+                </div>
+            </div>
+        </li>
+    </ul>
+    
+    
+    
+
+    
+        <div class="paginator">
+        <span class="prev">
+            &lt;前页
+        </span>
+        
+        
+
+                <span class="thispage">1</span>
+                
+            <a href="?subcat=全部&amp;p=2&amp;updated_at=" >2</a>
+        
+                
+            <a href="?subcat=全部&amp;p=3&amp;updated_at=" >3</a>
+        
+                
+            <a href="?subcat=全部&amp;p=4&amp;updated_at=" >4</a>
+        
+                
+            <a href="?subcat=全部&amp;p=5&amp;updated_at=" >5</a>
+        
+                
+            <a href="?subcat=全部&amp;p=6&amp;updated_at=" >6</a>
+        
+                
+            <a href="?subcat=全部&amp;p=7&amp;updated_at=" >7</a>
+        
+                
+            <a href="?subcat=全部&amp;p=8&amp;updated_at=" >8</a>
+        
+                
+            <a href="?subcat=全部&amp;p=9&amp;updated_at=" >9</a>
+        
+            <span class="break">...</span>
+                
+            <a href="?subcat=全部&amp;p=13&amp;updated_at=" >13</a>
+        
+            <a href="?subcat=全部&amp;p=14&amp;updated_at=" >14</a>
+        
+        <span class="next">
+            <link rel="next" href="?subcat=全部&amp;p=2&amp;updated_at="/>
+            <a href="?subcat=全部&amp;p=2&amp;updated_at=" >后页&gt;</a>
+        </span>
+
+        </div>
+
+
+
+</div>
+      <div class="aside">
+        
+
+    
+  
+
+  <h2>
+    <span>豆瓣图书250</span>
+      <span class="pl">(随机显示)</span>
+      &nbsp;&middot;&nbsp;&middot;&nbsp;&middot;&nbsp;&middot;&nbsp;&middot;&nbsp;&middot;
+      <span class="pl">&nbsp;(
+          <a href="/top250">全部</a>
+        ) </span>
+
+  </h2>
+
+
+    
+<ul class="entry-list-col3 clearfix">
+    <li>
+        <p>
+            <a href="https://book.douban.com/subject/26545308/"><img width="67px" src="https://img9.doubanio.com/view/subject/s/public/s28297426.jpg"/></a>
+        </p>
+        <h2>
+        <a href="https://book.douban.com/subject/26545308/">南京大屠杀</a>
+        </h2>
+    </li>
+    <li>
+        <p>
+            <a href="https://book.douban.com/subject/24382569/"><img width="67px" src="https://img3.doubanio.com/view/subject/s/public/s26546959.jpg"/></a>
+        </p>
+        <h2>
+        <a href="https://book.douban.com/subject/24382569/">一桩事先张扬的凶杀案</a>
+        </h2>
+    </li>
+    <li>
+        <p>
+            <a href="https://book.douban.com/subject/2035171/"><img width="67px" src="https://img3.doubanio.com/view/subject/s/public/s3983958.jpg"/></a>
+        </p>
+        <h2>
+        <a href="https://book.douban.com/subject/2035171/">人生的枷锁</a>
+        </h2>
+    </li>
+    <div class="clearfix rr" style="width:100%"></div>
+    <li>
+        <p>
+            <a href="https://book.douban.com/subject/21570668/"><img width="67px" src="https://img3.doubanio.com/view/subject/s/public/s25807032.jpg"/></a>
+        </p>
+        <h2>
+        <a href="https://book.douban.com/subject/21570668/">会饮篇</a>
+        </h2>
+    </li>
+    <li>
+        <p>
+            <a href="https://book.douban.com/subject/1041482/"><img width="67px" src="https://img9.doubanio.com/view/subject/s/public/s1800355.jpg"/></a>
+        </p>
+        <h2>
+        <a href="https://book.douban.com/subject/1041482/">万历十五年</a>
+        </h2>
+    </li>
+    <li>
+        <p>
+            <a href="https://book.douban.com/subject/6388661/"><img width="67px" src="https://img2.doubanio.com/view/subject/s/public/s6828981.jpg"/></a>
+        </p>
+        <h2>
+        <a href="https://book.douban.com/subject/6388661/">这些人，那些事</a>
+        </h2>
+    </li>
+    <div class="clearfix rr" style="width:100%"></div>
+    <li>
+        <p>
+            <a href="https://book.douban.com/subject/1035848/"><img width="67px" src="https://img3.doubanio.com/view/subject/s/public/s1070937.jpg"/></a>
+        </p>
+        <h2>
+        <a href="https://book.douban.com/subject/1035848/">一千零一夜</a>
+        </h2>
+    </li>
+    <li>
+        <p>
+            <a href="https://book.douban.com/subject/26586492/"><img width="67px" src="https://img3.doubanio.com/view/subject/s/public/s28284337.jpg"/></a>
+        </p>
+        <h2>
+        <a href="https://book.douban.com/subject/26586492/">火星救援</a>
+        </h2>
+    </li>
+    <li>
+        <p>
+            <a href="https://book.douban.com/subject/3006581/"><img width="67px" src="https://img3.doubanio.com/view/subject/s/public/s2962510.jpg"/></a>
+        </p>
+        <h2>
+        <a href="https://book.douban.com/subject/3006581/">无人生还</a>
+        </h2>
+    </li>
+    <div class="clearfix rr" style="width:100%"></div>
+</ul>
+
+
+      </div>
+      <div class="extra">
+        
+      </div>
+    </div>
+  </div>
+
+        
+  <div id="footer">
+    
+<span id="icp" class="fleft gray-link">
+    &copy; 2005－2026 douban.com, all rights reserved 北京豆网科技有限公司
+</span>
+
+<a href="https://www.douban.com/hnypt/variformcyst.py" style="display: none;"></a>
+
+<span class="fright">
+    <a href="https://www.douban.com/about">关于豆瓣</a>
+    · <a href="https://www.douban.com/jobs">在豆瓣工作</a>
+    · <a href="https://www.douban.com/about?topic=contactus">联系我们</a>
+    · <a href="https://www.douban.com/about/legal">法律声明</a>
+    
+    · <a href="https://help.douban.com/?app=book" target="_blank">帮助中心</a>
+    · <a href="https://book.douban.com/library_invitation">图书馆合作</a>
+    · <a href="https://www.douban.com/doubanapp/">移动应用</a>
+</span>
+
+  </div>
+
+    </div>
+      
+
+    <script type="text/javascript">
+    $(function(){
+      $('.add2cartWidget').each(function() {
+        var add2CartBtn = $(this).find('.add2cart');
+        var inCartHint = $(this).find('.book-in-cart');
+        var deleteBtn = inCartHint.find('.delete-cart-item');
+
+        deleteBtn.click(function(e) {
+          e.preventDefault();
+          $.post_withck('/cart', {remove: this.rel}, function() {
+            add2CartBtn.show();
+            inCartHint.hide();
+          });
+        });
+      });
+    });
+  </script>
+    <!-- mako -->
+    
+    
+  
+
+<script type="text/javascript">
+  var _paq = _paq || [];
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+  (function() {
+    var p=(('https:' == document.location.protocol) ? 'https' : 'http'), u=p+'://fundin.douban.com/';
+    _paq.push(['setTrackerUrl', u+'piwik']);
+    _paq.push(['setSiteId', '100001']);
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.type='text/javascript';
+    g.defer=true;
+    g.async=true;
+    g.src=p+'://s.doubanio.com/dae/fundin/piwik.js';
+    s.parentNode.insertBefore(g,s);
+  })();
+</script>
+
+<script type="text/javascript">
+var setMethodWithNs = function(namespace) {
+  var ns = namespace ? namespace + '.' : ''
+    , fn = function(string) {
+        if(!ns) {return string}
+        return ns + string
+      }
+  return fn
+}
+
+var gaWithNamespace = function(fn, namespace) {
+  var method = setMethodWithNs(namespace)
+  fn.call(this, method)
+}
+
+var _gaq = _gaq || []
+  , accounts = [
+      { id: 'UA-7019765-1', namespace: 'douban' }
+    , { id: 'UA-7019765-16', namespace: '' }
+    ]
+  , gaInit = function(account) {
+      gaWithNamespace(function(method) {
+        gaInitFn.call(this, method, account)
+      }, account.namespace)
+    }
+  , gaInitFn = function(method, account) {
+      _gaq.push([method('_setAccount'), account.id])
+
+      
+  _gaq.push([method('_addOrganic'), 'google', 'q'])
+  _gaq.push([method('_addOrganic'), 'baidu', 'wd'])
+  _gaq.push([method('_addOrganic'), 'soso', 'w'])
+  _gaq.push([method('_addOrganic'), 'youdao', 'q'])
+  _gaq.push([method('_addOrganic'), 'so.360.cn', 'q'])
+  _gaq.push([method('_addOrganic'), 'sogou', 'query'])
+  if (account.namespace) {
+    _gaq.push([method('_addIgnoredOrganic'), '豆瓣'])
+    _gaq.push([method('_addIgnoredOrganic'), 'douban'])
+    _gaq.push([method('_addIgnoredOrganic'), '豆瓣网'])
+    _gaq.push([method('_addIgnoredOrganic'), 'www.douban.com'])
+  }
+
+      if (account.namespace === 'douban') {
+        _gaq.push([method('_setDomainName'), '.douban.com'])
+      }
+
+        _gaq.push([method('_setCustomVar'), 1, 'responsive_view_mode', 'desktop', 3])
+
+        _gaq.push([method('_setCustomVar'), 2, 'login_status', '0', 2]);
+
+      _gaq.push([method('_trackPageview')])
+    }
+
+for(var i = 0, l = accounts.length; i < l; i++) {
+  var account = accounts[i]
+  gaInit(account)
+}
+
+
+;(function() {
+    var ga = document.createElement('script');
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    ga.setAttribute('async', 'true');
+    document.documentElement.firstChild.appendChild(ga);
+})()
+</script>
+
+
+
+
+
+
+
+
+    <!-- dae-web-book--default-dfc9bbd85-6g6pp-->
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

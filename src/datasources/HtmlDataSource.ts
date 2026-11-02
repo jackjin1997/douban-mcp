@@ -13,7 +13,9 @@ import {
   parseMovieDetail, parseMovieSearch, parseTop250, parseMovieReviewsFromHtml,
   parseMovieWeeklyChart, parseMovieComingChart,
 } from './parsers/movie.js';
-import { parseBookDetail, parseBookSearch, parseBookReviewsFromHtml } from './parsers/book.js';
+import {
+  parseBookDetail, parseBookSearch, parseBookReviewsFromHtml, parseBookTagList, parseBookLatest,
+} from './parsers/book.js';
 
 export interface HtmlDataSourceOpts {
   cookie?: string;
@@ -170,10 +172,14 @@ export class HtmlDataSource implements IDoubanDataSource {
   async getBookChart(kind: BookChartKind, count: number): Promise<SubjectSummary[]> {
     const key = `html:getBookChart:${kind}:${count}`;
     return this.opts.cache.wrap(key, 3600, async () => {
-      const tag = kind === 'fiction' ? '小说' : kind === 'non_fiction' ? '随笔' : '新书';
+      if (kind === 'new') {
+        const html = await this.httpGet('https://book.douban.com/latest', { domain: 'book.douban.com' });
+        return parseBookLatest(html).slice(0, count);
+      }
+      const tag = kind === 'fiction' ? '小说' : '随笔';
       const url = `https://book.douban.com/tag/${encodeURIComponent(tag)}`;
       const html = await this.httpGet(url, { domain: 'book.douban.com' });
-      return parseBookSearch(html).slice(0, count);
+      return parseBookTagList(html).slice(0, count);
     });
   }
   async getUserCollections(

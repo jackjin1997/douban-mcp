@@ -44,3 +44,33 @@ describe('HtmlDataSource.searchBook', () => {
     expect(items[0].id).toMatch(/^\d+$/);
   });
 });
+
+describe('HtmlDataSource.getBookChart', () => {
+  beforeEach(() => mockedAxios.get.mockReset());
+
+  it('fiction hits the 小说 tag page and parses subject-item list', async () => {
+    mockedAxios.get.mockResolvedValue({
+      status: 200,
+      data: loadFixture('book/tag-fiction.html'),
+      request: { res: { responseUrl: 'https://book.douban.com/tag/%E5%B0%8F%E8%AF%B4' } },
+    });
+    const items = await makeDS().getBookChart('fiction', 5);
+    const [url] = mockedAxios.get.mock.calls[0];
+    expect(url).toBe(`https://book.douban.com/tag/${encodeURIComponent('小说')}`);
+    expect(items).toHaveLength(5);
+    expect(items[0].id).toBe('38370177');
+  });
+
+  it('new hits /latest (新书速递) and parses media list', async () => {
+    mockedAxios.get.mockResolvedValue({
+      status: 200,
+      data: loadFixture('book/latest.html'),
+      request: { res: { responseUrl: 'https://book.douban.com/latest' } },
+    });
+    const items = await makeDS().getBookChart('new', 3);
+    const [url] = mockedAxios.get.mock.calls[0];
+    expect(url).toBe('https://book.douban.com/latest');
+    expect(items).toHaveLength(3);
+    expect(items[0].id).toBe('38522388');
+  });
+});

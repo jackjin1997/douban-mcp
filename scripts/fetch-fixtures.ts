@@ -172,6 +172,18 @@ async function main() {
       save: join(fixturesDir, 'book', 'search-three-body.html'),
       referer: 'https://book.douban.com/',
     },
+    {
+      // book-chart fiction/non_fiction: tag pages are server-rendered li.subject-item lists
+      url: 'https://book.douban.com/tag/%E5%B0%8F%E8%AF%B4',
+      save: join(fixturesDir, 'book', 'tag-fiction.html'),
+      referer: 'https://book.douban.com/',
+    },
+    {
+      // book-chart new: 新书速递, ul.chart-dashed-list li.media
+      url: 'https://book.douban.com/latest',
+      save: join(fixturesDir, 'book', 'latest.html'),
+      referer: 'https://book.douban.com/',
+    },
   ];
 
   // NOTE: movie/inception.html (subject/3541415) requires a browser to solve Douban's

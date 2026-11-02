@@ -165,3 +165,54 @@ export function parseBookReviewsFromHtml(html: string): Review[] {
   });
   return out;
 }
+
+/**
+ * 解析 book.douban.com/tag/<tag> 列表页（book-chart fiction / non_fiction）。
+ * 服务端渲染：ul.subject-list > li.subject-item，标题在 .info h2 a，评分在 .rating_nums。
+ * 列表缺失视为页面结构漂移，抛 ParseError 而不是返回 []。
+ */
+export function parseBookTagList(html: string): SubjectSummary[] {
+  const $ = cheerio.load(html);
+  const out: SubjectSummary[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  $('li.subject-item').each((_: number, el: any) => {
+    const a = $(el).find('.info h2 a').first();
+    const url = a.attr('href') ?? '';
+    const m = url.match(/\/subject\/(\d+)/);
+    if (!m) return;
+    out.push({
+      id: m[1],
+      title: (a.attr('title') ?? a.text()).trim(),
+      url,
+      rating: parseFloat($(el).find('.rating_nums').first().text()) || undefined,
+      cover: $(el).find('.pic img').attr('src') || undefined,
+    });
+  });
+  if (out.length === 0) throw new ParseError('Cannot parse book tag list: no li.subject-item found');
+  return out;
+}
+
+/**
+ * 解析 book.douban.com/latest 新书速递（book-chart new）。
+ * 结构：ul.chart-dashed-list > li.media，标题在 .media__body h2 a，评分在 .subject-rating .font-small。
+ */
+export function parseBookLatest(html: string): SubjectSummary[] {
+  const $ = cheerio.load(html);
+  const out: SubjectSummary[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  $('ul.chart-dashed-list li.media').each((_: number, el: any) => {
+    const a = $(el).find('.media__body h2 a').first();
+    const url = a.attr('href') ?? '';
+    const m = url.match(/\/subject\/(\d+)/);
+    if (!m) return;
+    out.push({
+      id: m[1],
+      title: a.text().trim(),
+      url,
+      rating: parseFloat($(el).find('.subject-rating .font-small').first().text()) || undefined,
+      cover: $(el).find('img.subject-cover').attr('src') || undefined,
+    });
+  });
+  if (out.length === 0) throw new ParseError('Cannot parse book latest list: no li.media found');
+  return out;
+}
