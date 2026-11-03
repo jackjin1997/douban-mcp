@@ -116,12 +116,19 @@ v1.0 实测：**search-* 和 movie-chart top250 等聚合页匿名可用**；但
 | `DOUBAN_LOG_LEVEL` | `info` | debug/info/warn/error |
 | `DOUBAN_DISABLE_CACHE` | `false` | 关闭缓存（测试用） |
 | `DOUBAN_USER_AGENT` | 内置 Chrome UA | 覆盖默认 UA |
+| `DOUBAN_HOST` | `127.0.0.1` | SSE 模式监听地址（`--host` 优先） |
 
 ## 🔧 SSE 模式
 
 ```bash
 npx -y douban-mcp-cli serve --transport sse --port 3000
-# 然后在 MCP 客户端连接 http://localhost:3000/sse
+# 然后在 MCP 客户端连接 http://127.0.0.1:3000/sse
+```
+
+默认只监听 `127.0.0.1`。SSE 端点本身没有鉴权，而且会代理你的豆瓣登录态，所以要暴露给其他机器时必须显式指定，并自行加防火墙或反向代理：
+
+```bash
+npx -y douban-mcp-cli serve --transport sse --port 3000 --host 0.0.0.0
 ```
 
 ## 🧰 调试

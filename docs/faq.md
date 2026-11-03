@@ -20,7 +20,9 @@
 ```bash
 node dist/index.js serve --transport sse --port 3000
 ```
-然后在 MCP 客户端把 transport 配成 SSE 指向 `http://localhost:3000/sse`。
+然后在 MCP 客户端把 transport 配成 SSE 指向 `http://127.0.0.1:3000/sse`。
+
+默认只绑定 `127.0.0.1`（SSE 端点无鉴权且会代理你的 cookie）。需要局域网/容器外访问时加 `--host 0.0.0.0` 或设 `DOUBAN_HOST`，并自行放防火墙/反代后面。
 
 ## Q5: 提示"找不到对应资源"？
 
