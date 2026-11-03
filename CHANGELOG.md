@@ -6,6 +6,7 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ### Changed
 - `serve --transport sse` now binds to `127.0.0.1` by default instead of all interfaces. The SSE endpoint has no authentication and proxies the configured Douban cookie, so exposing it is opt-in via `--host <addr>` or `DOUBAN_HOST`; binding `0.0.0.0` / `::` logs a warning.
+- SSE mode rejects requests whose `Host` / `Origin` header is not the loopback endpoint when bound to a loopback address (DNS rebinding protection). The SDK only checks this on `POST /messages`; the `GET /sse` handshake is now checked too.
 
 ### Fixed
 - `book-chart` silently returned `[]` for every kind: the tag pages (`fiction` / `non_fiction`) are server-rendered `li.subject-item` lists, not the `window.__DATA__` search payload the old code parsed. Added `parseBookTagList`; `new` now reads 新书速递 (`/latest`) via `parseBookLatest`. Both throw `PARSE_FAILED` instead of returning an empty list when the page structure drifts.
