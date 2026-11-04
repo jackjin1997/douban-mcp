@@ -34,6 +34,7 @@ jobs:
           probe search-book  --q "三体" --count 1
           probe movie-chart  --kind top250 --count 1
           probe movie-chart  --kind weekly --count 1
+          probe movie-chart  --kind new --count 1
           probe book-chart   --kind fiction --count 1
           probe book-chart   --kind new --count 1
       - name: Open issue on failure

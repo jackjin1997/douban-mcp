@@ -144,11 +144,18 @@ export function parseMovieSearch(html: string): SubjectSummary[] {
   return out;
 }
 
+/**
+ * 解析 movie.douban.com/top250?start=N
+ * 容器 ol.grid_view 缺失视为页面结构漂移，抛 ParseError；容器在但没有 li 是翻过了
+ * 末页（start ≥ 250，2026-11-04 实测仍返回空容器），合法返回 []。
+ */
 export function parseTop250(html: string): SubjectSummary[] {
   const $ = cheerio.load(html);
+  const grid = $('ol.grid_view');
+  if (grid.length === 0) throw new ParseError('Cannot parse top250: ol.grid_view container missing');
   const out: SubjectSummary[] = [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  $('ol.grid_view li').each((_: number, el: any) => {
+  grid.find('li').each((_: number, el: any) => {
     const item = $(el).find('.item').first();
     const titleA = item.find('.hd a').first();
     const url = titleA.attr('href') ?? '';
@@ -189,6 +196,7 @@ export function parseMovieWeeklyChart(html: string): SubjectSummary[] {
       cover: $(el).find('img').first().attr('src') ?? undefined,
     });
   });
+  if (out.length === 0) throw new ParseError('Cannot parse weekly chart: no tr.item with a subject link found');
   return out;
 }
 
@@ -214,6 +222,7 @@ export function parseMovieComingChart(html: string): SubjectSummary[] {
       cover: $(el).find('img').first().attr('src') ?? undefined,
     });
   });
+  if (out.length === 0) throw new ParseError('Cannot parse coming chart: no table.coming_list rows with a subject link found');
   return out;
 }
 

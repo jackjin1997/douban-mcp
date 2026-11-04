@@ -1,4 +1,5 @@
 import { parseMovieDetail, parseMovieSearch, parseTop250, parseMovieWeeklyChart, parseMovieComingChart } from '../../../src/datasources/parsers/movie.js';
+import { ParseError } from '../../../src/errors.js';
 import { loadFixture } from '../../helpers/loadFixture.js';
 
 describe('parseMovieDetail (Inception)', () => {
@@ -42,6 +43,12 @@ describe('parseMovieSearch (inception)', () => {
 describe('parseTop250', () => {
   const items = parseTop250(loadFixture('movie/top250.html'));
   it('returns 25 items per page', () => { expect(items.length).toBe(25); });
+  it('throws ParseError when the grid container is missing (structure drift)', () => {
+    expect(() => parseTop250('<html><body><div id="content">nothing</div></body></html>')).toThrow(ParseError);
+  });
+  it('returns [] for an empty grid (page past the end of the list)', () => {
+    expect(parseTop250('<html><body><ol class="grid_view"></ol></body></html>')).toEqual([]);
+  });
 });
 
 describe('parseMovieWeeklyChart', () => {
@@ -51,6 +58,9 @@ describe('parseMovieWeeklyChart', () => {
     expect(items[0].id).toMatch(/^\d+$/);
     expect(items[0].title.length).toBeGreaterThan(0);
   });
+  it('throws ParseError instead of returning [] when no rows match', () => {
+    expect(() => parseMovieWeeklyChart('<html><body><table><tr><td>x</td></tr></table></body></html>')).toThrow(ParseError);
+  });
 });
 
 describe('parseMovieComingChart', () => {
@@ -59,5 +69,8 @@ describe('parseMovieComingChart', () => {
     expect(items.length).toBeGreaterThanOrEqual(5);
     expect(items[0].id).toMatch(/^\d+$/);
     expect(items[0].title.length).toBeGreaterThan(0);
+  });
+  it('throws ParseError instead of returning [] when no rows match', () => {
+    expect(() => parseMovieComingChart('<html><body><div>no table</div></body></html>')).toThrow(ParseError);
   });
 });
