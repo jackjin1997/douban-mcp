@@ -1,4 +1,4 @@
-import axios, { AxiosInstance } from 'axios';
+import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import type {
   IDoubanDataSource, SubjectSummary, MovieDetail, MovieChartKind,
   Review, BookDetail, BookChartKind, Collection, CollectionStatus,
@@ -7,7 +7,7 @@ import type {
 import { MemoryCache } from '../cache/MemoryCache.js';
 import { DomainLimiter } from '../ratelimit/Limiter.js';
 import { CookieManager } from '../auth/CookieManager.js';
-import { AuthError, NetworkError, NotFoundError, RateLimitError } from '../errors.js';
+import { AuthError, NetworkError, NotFoundError, ParseError, RateLimitError, WriteRejectedError } from '../errors.js';
 import { parseUserProfile, parseUserCollections, parseUserDoulist } from './parsers/user.js';
 import {
   parseMovieDetail, parseMovieSearch, parseTop250, parseMovieReviewsFromHtml,
@@ -214,6 +214,45 @@ export class HtmlDataSource implements IDoubanDataSource {
       return parseUserProfile(html);
     });
   }
+  /**
+   * A write only counts as done when Douban says so. The j/subject endpoints
+   * answer JSON `{r: 0}` on success and `{r: 1, err|code}` on refusal (observed
+   * live 2026-11-04: anonymous POST → 404 `{"r":1,"code":404}`); risk control
+   * and expired cookies instead come back as 200 + HTML or a redirect, which
+   * the old `status < 400` check happily reported as success.
+   */
+  private assertWriteAccepted(res: AxiosResponse, domain: string, url: string): void {
+    const finalUrl: string = (res.request as { res?: { responseUrl?: string } })?.res?.responseUrl ?? url;
+    const blockedByRiskControl = (why: string): never => {
+      this.opts.rateLimiter.markCooldown(domain);
+      this.opts.rateLimiter.lockWriteForSession(domain);
+      throw new RateLimitError(`write blocked by risk control (${why}); session write lock engaged`);
+    };
+
+    if (res.status === 401 || res.status === 403) blockedByRiskControl(`HTTP ${res.status}`);
+
+    const body: unknown = res.data;
+    if (typeof body === 'string') {
+      if (isPowChallenge(body, finalUrl)) blockedByRiskControl(`challenge page at ${finalUrl}`);
+      if (/accounts\.douban\.com|\/accounts\/login/.test(finalUrl)) {
+        throw new AuthError(`write redirected to login page (${finalUrl}); cookie likely expired`);
+      }
+      throw new ParseError(`write endpoint returned non-JSON body (HTTP ${res.status}) at ${finalUrl}`);
+    }
+
+    const j = (body && typeof body === 'object' ? body : {}) as { r?: unknown; err?: unknown; msg?: unknown; code?: unknown };
+    if (j.r === 0) return;
+
+    const detail = j.err != null ? String(j.err)
+      : j.msg != null ? String(j.msg)
+      : j.code != null ? `code ${String(j.code)}`
+      : j.r === undefined ? 'response has no "r" field' : `r=${String(j.r)}`;
+    if (/login|登录/i.test(detail)) throw new AuthError(`douban rejected write: ${detail}`);
+    if (res.status === 404) throw new NotFoundError(`write endpoint 404 at ${url} (${detail})`);
+    if (res.status >= 400) throw new NetworkError(`HTTP ${res.status} at ${url} (${detail})`);
+    throw new WriteRejectedError(detail);
+  }
+
   async markSubject(
     category: 'movie' | 'book',
     id: string,
@@ -248,12 +287,7 @@ export class HtmlDataSource implements IDoubanDataSource {
       throw new NetworkError(msg);
     });
 
-    if (res.status === 401 || res.status === 403) {
-      this.opts.rateLimiter.markCooldown(domain);
-      this.opts.rateLimiter.lockWriteForSession(domain);
-      throw new RateLimitError('write blocked by risk control; session write lock engaged');
-    }
-    if (res.status >= 400) throw new NetworkError(`HTTP ${res.status}`);
+    this.assertWriteAccepted(res, domain, url);
 
     const ownUid = this.cookies.getOwnUid();
     if (ownUid) this.opts.cache.invalidate(`html:getUserCollections:${ownUid}:${category}`);
@@ -282,12 +316,7 @@ export class HtmlDataSource implements IDoubanDataSource {
       throw new NetworkError(msg);
     });
 
-    if (res.status === 401 || res.status === 403) {
-      this.opts.rateLimiter.markCooldown(domain);
-      this.opts.rateLimiter.lockWriteForSession(domain);
-      throw new RateLimitError('unmark blocked by risk control');
-    }
-    if (res.status >= 400) throw new NetworkError(`HTTP ${res.status}`);
+    this.assertWriteAccepted(res, domain, url);
 
     const ownUid = this.cookies.getOwnUid();
     if (ownUid) this.opts.cache.invalidate(`html:getUserCollections:${ownUid}:${category}`);

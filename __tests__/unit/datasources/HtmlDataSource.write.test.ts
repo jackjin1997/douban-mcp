@@ -2,7 +2,7 @@ import axios from 'axios';
 import { HtmlDataSource } from '../../../src/datasources/HtmlDataSource.js';
 import { MemoryCache } from '../../../src/cache/MemoryCache.js';
 import { DomainLimiter } from '../../../src/ratelimit/Limiter.js';
-import { AuthError, RateLimitError } from '../../../src/errors.js';
+import { AuthError, RateLimitError, NotFoundError, ParseError, WriteRejectedError } from '../../../src/errors.js';
 
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
@@ -67,8 +67,65 @@ describe('HtmlDataSource.markSubject', () => {
     const ds = makeDS('bid=x; dbcl2="1:y"; ck=CSRF');
     await expect(ds.markSubject('movie', '1', 'collect', {})).rejects.toBeInstanceOf(RateLimitError);
     // second call should be blocked by lockWriteForSession even with fresh cooldown
-    mockedAxios.post.mockResolvedValue({ status: 200, data: {} });
+    mockedAxios.post.mockResolvedValue({ status: 200, data: { r: 0 } });
     await expect(ds.markSubject('movie', '2', 'collect', {})).rejects.toBeInstanceOf(RateLimitError);
+  });
+
+  describe('response body validation', () => {
+    const ck = 'bid=x; dbcl2="1:y"; ck=CSRF';
+    const RISK_HTML = '<html><script>window.captcha = {}; var captchaToken = "x";</script></html>';
+
+    it('200 + risk-control HTML is a failure: RateLimitError + session write lock', async () => {
+      mockedAxios.post.mockResolvedValue({ status: 200, data: RISK_HTML });
+      const ds = makeDS(ck);
+      await expect(ds.markSubject('movie', '1', 'collect', {})).rejects.toBeInstanceOf(RateLimitError);
+      mockedAxios.post.mockClear();
+      mockedAxios.post.mockResolvedValue({ status: 200, data: { r: 0 } });
+      await expect(ds.markSubject('movie', '2', 'collect', {})).rejects.toBeInstanceOf(RateLimitError);
+      expect(mockedAxios.post).not.toHaveBeenCalled();
+    });
+
+    it('200 redirected to sec.douban.com is risk control even with bland HTML', async () => {
+      mockedAxios.post.mockResolvedValue({
+        status: 200, data: '<html>ok</html>',
+        request: { res: { responseUrl: 'https://sec.douban.com/b?r=xxx' } },
+      });
+      await expect(makeDS(ck).markSubject('movie', '1', 'collect', {})).rejects.toBeInstanceOf(RateLimitError);
+    });
+
+    it('200 redirected to the login page is AuthError', async () => {
+      mockedAxios.post.mockResolvedValue({
+        status: 200, data: '<html>login</html>',
+        request: { res: { responseUrl: 'https://accounts.douban.com/passport/login?redir=...' } },
+      });
+      await expect(makeDS(ck).markSubject('movie', '1', 'collect', {})).rejects.toBeInstanceOf(AuthError);
+    });
+
+    it('200 + unrelated HTML is ParseError, not success', async () => {
+      mockedAxios.post.mockResolvedValue({ status: 200, data: '<html><body>something else</body></html>' });
+      await expect(makeDS(ck).markSubject('movie', '1', 'collect', {})).rejects.toBeInstanceOf(ParseError);
+    });
+
+    it('200 + {r:1, err:"need_login"} is AuthError', async () => {
+      mockedAxios.post.mockResolvedValue({ status: 200, data: { r: 1, err: 'need_login' } });
+      await expect(makeDS(ck).markSubject('movie', '1', 'collect', {})).rejects.toBeInstanceOf(AuthError);
+    });
+
+    it('200 + {r:1, err:"..."} is WriteRejectedError carrying the server message', async () => {
+      mockedAxios.post.mockResolvedValue({ status: 200, data: { r: 1, err: 'rating out of range' } });
+      await expect(makeDS(ck).markSubject('movie', '1', 'collect', { rating: 5 }))
+        .rejects.toMatchObject({ constructor: WriteRejectedError, message: expect.stringContaining('rating out of range') });
+    });
+
+    it('200 + {} without r is not treated as success', async () => {
+      mockedAxios.post.mockResolvedValue({ status: 200, data: {} });
+      await expect(makeDS(ck).markSubject('movie', '1', 'collect', {})).rejects.toBeInstanceOf(WriteRejectedError);
+    });
+
+    it('404 + {r:1, code:404} (observed live 2026-11-04) is NotFoundError', async () => {
+      mockedAxios.post.mockResolvedValue({ status: 404, data: { r: 1, code: 404 } });
+      await expect(makeDS(ck).markSubject('movie', '1', 'collect', {})).rejects.toBeInstanceOf(NotFoundError);
+    });
   });
 });
 
@@ -76,11 +133,21 @@ describe('HtmlDataSource.unmarkSubject', () => {
   beforeEach(() => mockedAxios.post.mockReset());
 
   it('POSTs to /remove endpoint', async () => {
-    mockedAxios.post.mockResolvedValue({ status: 200, data: {} });
+    mockedAxios.post.mockResolvedValue({ status: 200, data: { r: 0 } });
     const ds = makeDS('bid=x; dbcl2="1:y"; ck=CSRF');
     await ds.unmarkSubject('movie', '1234');
     const [url, body] = (mockedAxios.post as jest.Mock).mock.calls.at(-1)!;
     expect(url).toContain('/1234/remove');
     expect((body as URLSearchParams).toString()).toContain('ck=CSRF');
+  });
+
+  it('200 + risk-control HTML is RateLimitError, not success', async () => {
+    mockedAxios.post.mockResolvedValue({ status: 200, data: '<html><script>var verifyToken="x"</script></html>' });
+    await expect(makeDS('bid=x; dbcl2="1:y"; ck=CSRF').unmarkSubject('movie', '1')).rejects.toBeInstanceOf(RateLimitError);
+  });
+
+  it('200 + {r:1} is WriteRejectedError', async () => {
+    mockedAxios.post.mockResolvedValue({ status: 200, data: { r: 1, err: 'not marked' } });
+    await expect(makeDS('bid=x; dbcl2="1:y"; ck=CSRF').unmarkSubject('movie', '1')).rejects.toBeInstanceOf(WriteRejectedError);
   });
 });

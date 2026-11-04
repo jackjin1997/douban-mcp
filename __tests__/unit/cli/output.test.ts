@@ -1,7 +1,7 @@
 import { renderResult, renderError, exitCodeFor } from '../../../src/cli/output.js';
 import type { ToolResult } from '../../../src/tools/registry.js';
 import {
-  AuthError, NotFoundError, RateLimitError, WriteDisabledError, ParseError, NetworkError,
+  AuthError, NotFoundError, RateLimitError, WriteDisabledError, ParseError, NetworkError, WriteRejectedError,
 } from '../../../src/errors.js';
 
 describe('renderResult', () => {
@@ -46,5 +46,13 @@ describe('exitCodeFor', () => {
     [new Error('boom'), 4],
   ])('maps %s -> %s', (e: any, code) => {
     expect(exitCodeFor(e)).toBe(code);
+  });
+});
+
+describe('WriteRejectedError', () => {
+  it('maps to exit 4 and code WRITE_REJECTED', () => {
+    const e = new WriteRejectedError('rating out of range');
+    expect(exitCodeFor(e)).toBe(4);
+    expect(JSON.parse(renderError(e, true))).toEqual({ error: { code: 'WRITE_REJECTED', message: 'rating out of range' } });
   });
 });

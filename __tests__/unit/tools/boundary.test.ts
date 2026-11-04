@@ -1,7 +1,7 @@
-import { withErrorBoundary, errorToCode } from '../../../src/tools/_boundary.js';
+import { withErrorBoundary, errorToCode, formatError } from '../../../src/tools/_boundary.js';
 import {
   AuthError, RateLimitError, NotFoundError, WriteDisabledError,
-  ParseError, NetworkError,
+  ParseError, NetworkError, WriteRejectedError,
 } from '../../../src/errors.js';
 
 describe('withErrorBoundary', () => {
@@ -45,5 +45,15 @@ describe('errorToCode', () => {
     [new Error('x'), 'UNKNOWN'],
   ])('maps %s', (e: any, code) => {
     expect(errorToCode(e)).toBe(code);
+  });
+});
+
+describe('formatError — write failures', () => {
+  it('WriteRejectedError surfaces the server message and its own code', () => {
+    expect(formatError(new WriteRejectedError('rating out of range'))).toContain('rating out of range');
+    expect(errorToCode(new WriteRejectedError('x'))).toBe('WRITE_REJECTED');
+  });
+  it('risk-control write block renders the risk-control hint', () => {
+    expect(formatError(new RateLimitError('write blocked by risk control (HTTP 403); session write lock engaged'))).toContain('风控');
   });
 });

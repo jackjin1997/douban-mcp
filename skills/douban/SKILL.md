@@ -53,7 +53,7 @@ douban-mcp-cli --json user-collections --category movie --status wish \
 | 1 | AUTH_FAILED / WRITE_DISABLED | 提示用户更新 cookie 或开启 enable_write |
 | 2 | NOT_FOUND | 报告 id 不存在 |
 | 3 | RATE_LIMITED | 等 60s 重试 |
-| 4 | PARSE_FAILED / NETWORK / UNKNOWN | 重试一次；仍失败则报告 |
+| 4 | PARSE_FAILED / NETWORK_ERROR / WRITE_REJECTED / UNKNOWN | 重试一次；仍失败则报告。WRITE_REJECTED 是豆瓣明确拒绝（message 带原因），不要重试 |
 
 ## 配置前置条件
 
