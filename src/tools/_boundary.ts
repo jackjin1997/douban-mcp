@@ -19,7 +19,7 @@ export function withErrorBoundary<TArgs>(handler: (args: TArgs) => Promise<ToolR
 
 export function formatError(e: unknown): string {
   if (e instanceof AuthError) {
-    // Frodo 签名问题不是用户能解决的 cookie 失效，给真实消息
+    // DOUBAN_DATA_SOURCE=frodo 是配置错误而非 cookie 失效，给真实消息
     if (e.message.includes('Frodo') || e.message.includes('签名')) return `❌ ${e.message}`;
     return '❌ 豆瓣 cookie 已失效。请更新 DOUBAN_COOKIE 环境变量后重启 MCP 服务。';
   }

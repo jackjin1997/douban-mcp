@@ -1,6 +1,5 @@
-import { createDataSource } from '../../../src/datasources/factory.js';
+import { createDataSource, FRODO_UNAVAILABLE_MESSAGE } from '../../../src/datasources/factory.js';
 import { HtmlDataSource } from '../../../src/datasources/HtmlDataSource.js';
-import { FrodoDataSource } from '../../../src/datasources/FrodoDataSource.js';
 import { AuthError } from '../../../src/errors.js';
 
 describe('createDataSource', () => {
@@ -13,22 +12,19 @@ describe('createDataSource', () => {
   });
 
   it('throws for unknown kind', () => {
-    expect(() => createDataSource({ kind: 'mystery' as any })).toThrow();
+    expect(() => createDataSource({ kind: 'mystery' as any })).toThrow('Unknown DOUBAN_DATA_SOURCE=mystery');
   });
 
-  it('frodo is disabled by default', () => {
+  it('frodo is removed: throws AuthError with the migration message', () => {
     expect(() => createDataSource({ kind: 'frodo' })).toThrow(AuthError);
+    expect(() => createDataSource({ kind: 'frodo' })).toThrow(FRODO_UNAVAILABLE_MESSAGE);
   });
 
-  it('frodo returns FrodoDataSource when explicitly enabled', () => {
-    expect(createDataSource({ kind: 'frodo', allowExperimentalFrodo: true })).toBeInstanceOf(FrodoDataSource);
-  });
-
-  it('honors DOUBAN_DATA_SOURCE=frodo env only with explicit opt-in', () => {
+  it('DOUBAN_DATA_SOURCE=frodo from env fails the same way, even with the old opt-in flag', () => {
     process.env.DOUBAN_DATA_SOURCE = 'frodo';
     process.env.DOUBAN_EXPERIMENTAL_FRODO = 'true';
     try {
-      expect(createDataSource({})).toBeInstanceOf(FrodoDataSource);
+      expect(() => createDataSource({})).toThrow(AuthError);
     } finally {
       delete process.env.DOUBAN_DATA_SOURCE;
       delete process.env.DOUBAN_EXPERIMENTAL_FRODO;

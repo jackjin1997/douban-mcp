@@ -4,6 +4,9 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ## [Unreleased]
 
+### Removed
+- `FrodoDataSource` (the `frodo.douban.com` App API channel) and the `DOUBAN_EXPERIMENTAL_FRODO` / `DOUBAN_FRODO_APIKEY` variables. Douban requires a request signature for Frodo that was never reverse-engineered, so the channel could not serve a single real request. `DOUBAN_DATA_SOURCE=frodo` still fails fast with `AUTH_FAILED` and a message pointing at `html`; `doctor` reports it under `data_source`.
+
 ### Changed
 - `serve --transport sse` now binds to `127.0.0.1` by default instead of all interfaces. The SSE endpoint has no authentication and proxies the configured Douban cookie, so exposing it is opt-in via `--host <addr>` or `DOUBAN_HOST`; binding `0.0.0.0` / `::` logs a warning.
 - SSE mode rejects requests whose `Host` / `Origin` header is not the loopback endpoint when bound to a loopback address (DNS rebinding protection). The SDK only checks this on `POST /messages`; the `GET /sse` handshake is now checked too.

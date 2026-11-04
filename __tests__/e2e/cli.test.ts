@@ -75,9 +75,9 @@ describe('CLI e2e', () => {
     expect(stdout.trim()).toBe(pkg.version);
   });
 
-  it('frodo data source fails fast unless explicitly enabled', () => {
-    const result = run(['list-tools'], { DOUBAN_DATA_SOURCE: 'frodo', DOUBAN_EXPERIMENTAL_FRODO: 'false' });
+  it('DOUBAN_DATA_SOURCE=frodo fails fast with the removal message', () => {
+    const result = run(['list-tools'], { DOUBAN_DATA_SOURCE: 'frodo', DOUBAN_EXPERIMENTAL_FRODO: 'true' });
     expect(result.status).toBe(1);
-    expect(result.stderr).toContain('Frodo API');
+    expect(result.stderr).toContain('Frodo API 数据源已移除');
   });
 });

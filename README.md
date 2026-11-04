@@ -12,7 +12,7 @@
 
 - ✅ 11 个匿名只读工具（电影 / 图书 / 用户态 全覆盖）+ 1 个登录态 cookie 自检工具
 - ✅ 4 个写工具（标记想看/在看/看过 + 打分 + 评论 + 标签），双模式 opt-in
-- ✅ HTML 数据源默认可用；Frodo API 代码保留为实验通道（真实请求目前被签名要求拦截）
+- ✅ 唯一数据源为 HTML（axios + cheerio）；原 Frodo App API 通道因服务端签名要求已移除
 - ✅ MCP server (stdio + SSE) + agent native CLI（`--json` 模式）
 - ✅ Claude Code Skill 包随仓库交付
 - ✅ 内置缓存 + 限速 + 风控退避
@@ -65,7 +65,7 @@ v1.0 实测：**search-* 和 movie-chart top250 等聚合页匿名可用**；但
 ⚠️ 豆瓣对该页面触发了风控（详情页常见）。请配置 DOUBAN_COOKIE 后重试。
 ```
 
-> 注：原先设计的 `DOUBAN_DATA_SOURCE=frodo` 备用通道（豆瓣 App API）目前**已被服务端加签名要求拦截**（`invalid_request_997 签名缺失`），v1.0 不可用。详见 [`docs/jack_todo.md`](docs/jack_todo.md)。v1.x 计划做 cookie warm-up + 探索签名逆向。
+> 注：原先设计的 `DOUBAN_DATA_SOURCE=frodo` 备用通道（豆瓣 App API）被服务端加签名要求拦截（`invalid_request_997 签名缺失`），代码已移除。仍设置该值会立刻报 `AUTH_FAILED` 并提示改回 `html`。
 
 ## 🛠️ 工具清单
 
@@ -110,9 +110,7 @@ v1.0 实测：**search-* 和 movie-chart top250 等聚合页匿名可用**；但
 |---|---|---|
 | `DOUBAN_COOKIE` | — | 登录态 cookie |
 | `DOUBAN_ENABLE_WRITE` | `false` | 启用写操作 |
-| `DOUBAN_DATA_SOURCE` | `html` | `html`；`frodo` 仅实验用途 |
-| `DOUBAN_EXPERIMENTAL_FRODO` | `false` | 显式启用 Frodo 实验通道 |
-| `DOUBAN_FRODO_APIKEY` | 内置默认 | 覆盖 frodo apikey（仅实验通道） |
+| `DOUBAN_DATA_SOURCE` | `html` | 仅支持 `html`；`frodo` 已移除，设置后直接报错 |
 | `DOUBAN_LOG_LEVEL` | `info` | debug/info/warn/error |
 | `DOUBAN_DISABLE_CACHE` | `false` | 关闭缓存（测试用） |
 | `DOUBAN_USER_AGENT` | 内置 Chrome UA | 覆盖默认 UA |

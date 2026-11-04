@@ -86,9 +86,9 @@ export async function runCli(argv: string[]): Promise<void> {
       }
       checks.push({
         name: 'data_source',
-        ok: process.env.DOUBAN_DATA_SOURCE !== 'frodo' || process.env.DOUBAN_EXPERIMENTAL_FRODO === 'true',
-        detail: process.env.DOUBAN_DATA_SOURCE === 'frodo' && process.env.DOUBAN_EXPERIMENTAL_FRODO !== 'true'
-          ? 'frodo is disabled by default because Douban now requires signed Frodo requests'
+        ok: process.env.DOUBAN_DATA_SOURCE !== 'frodo',
+        detail: process.env.DOUBAN_DATA_SOURCE === 'frodo'
+          ? 'the frodo data source was removed (Douban requires signed Frodo requests); unset DOUBAN_DATA_SOURCE to use html'
           : process.env.DOUBAN_DATA_SOURCE ?? 'html',
       });
       checks.push({

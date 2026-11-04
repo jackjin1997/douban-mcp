@@ -39,7 +39,7 @@ node dist/index.js serve --transport sse --port 3000
 
 ## Q7: 为什么 HTML 模式有时候返回空？
 
-豆瓣对纯 HTTP 触发 PoW（proof-of-work）挑战，特别是 `movie.douban.com/subject/<id>/` 这类详情页。当前 v1.0 的缓解是：撞挑战时抛 `RateLimitError` + 提示用户配 cookie。Frodo 通道目前被服务端签名要求拦截，不再作为稳定兜底。详见 `docs/jack_todo.md`。
+豆瓣对纯 HTTP 触发 PoW（proof-of-work）挑战，特别是 `movie.douban.com/subject/<id>/` 这类详情页。当前 v1.0 的缓解是：撞挑战时抛 `RateLimitError` + 提示用户配 cookie。原 Frodo App API 通道被服务端签名要求拦截，代码已移除，HTML + cookie 是唯一数据路径。
 
 ## Q8: 写操作触发"未启用"？
 

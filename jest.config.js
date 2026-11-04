@@ -7,10 +7,10 @@ export default {
   testMatch: ['<rootDir>/__tests__/**/*.test.ts'],
   collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts'],
   coverageThreshold: {
-    // Interim thresholds for v1.0; FrodoDataSource has minimal direct tests
-    // (covered indirectly via cross-source contract). v1.x restores 80/70/80/80
-    // and adds dedicated FrodoDataSource coverage. See docs/jack_todo.md.
-    global: { branches: 40, functions: 65, lines: 70, statements: 70 }
+    // Measured 2026-11-04 after removing FrodoDataSource: 81 / 59 / 82 / 83
+    // (statements / branches / functions / lines). Branches still trail the
+    // 70% target from the spec; raise it as parser error paths get tests.
+    global: { branches: 55, functions: 80, lines: 80, statements: 80 }
   },
   transform: {
     '^.+\\.tsx?$': ['ts-jest', { useESM: true }]

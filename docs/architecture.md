@@ -12,12 +12,12 @@ MCP client / agent  →  index.ts dispatcher  →  server-entry.ts | cli.ts
                                               formatters/markdown.ts
                                                       ↓
                                               datasources/IDoubanDataSource
-                                                  ↙              ↘
-                                       HtmlDataSource         FrodoDataSource
-                                                  ↘              ↙
+                                                      ↓
+                                              HtmlDataSource（axios + cheerio）
+                                                      ↓
                                               cache + rate limit + cookie
                                                       ↓
-                                                豆瓣（HTML / Frodo API）
+                                                豆瓣（HTML 页面）
 ```
 
 ## 单一真理源：toolRegistry
