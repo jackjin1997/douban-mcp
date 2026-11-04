@@ -15,14 +15,16 @@
 
 设计参考了 [jobsonlook/xhs-mcp](https://github.com/jobsonlook/xhs-mcp) 的轻量纯 MCP 路线和 [aki66938/xhs-toolkit](https://github.com/aki66938/xhs-toolkit) 的"工具包"思想。但豆瓣无 x-s/x-t 动态签名，所以更轻量（不依赖 Playwright）；同时本项目把 CLI 当作 agent native 的一等入口。
 
-## Q4: SSE 模式怎么用？
+## Q4: HTTP / SSE 模式怎么用？
 
 ```bash
-node dist/index.js serve --transport sse --port 3000
+node dist/index.js serve --transport http --port 3000
 ```
-然后在 MCP 客户端把 transport 配成 SSE 指向 `http://127.0.0.1:3000/sse`。
+然后在 MCP 客户端把 transport 配成 Streamable HTTP 指向 `http://127.0.0.1:3000/mcp`。
 
-默认只绑定 `127.0.0.1`（SSE 端点无鉴权且会代理你的 cookie）。需要局域网/容器外访问时加 `--host 0.0.0.0` 或设 `DOUBAN_HOST`，并自行放防火墙/反代后面。
+旧的 `--transport sse` 和 `/sse` 端点仍然能用（同一进程同时提供），但已废弃，只为还不支持 Streamable HTTP 的客户端保留。
+
+默认只绑定 `127.0.0.1`（端点无鉴权且会代理你的 cookie），并校验 `Host` / `Origin`。需要局域网/容器外访问时加 `--host 0.0.0.0` 或设 `DOUBAN_HOST`，并自行放防火墙/反代后面。
 
 ## Q5: 提示"找不到对应资源"？
 

@@ -3,11 +3,12 @@ import { buildServer } from './server.js';
 import { createDataSource } from './datasources/factory.js';
 import { logger } from './utils/logger.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { Server as HttpServer, IncomingMessage } from 'http';
+import type { Server as HttpServer, IncomingMessage, ServerResponse } from 'http';
 
-export interface ServeOpts { transport: 'stdio' | 'sse'; port: number; host: string; }
+/** `http` is Streamable HTTP (`/mcp`); `sse` is the deprecated 2024-11-05 transport, kept as an alias. */
+export interface ServeOpts { transport: 'stdio' | 'http' | 'sse'; port: number; host: string; }
 
-export const DEFAULT_SSE_HOST = '127.0.0.1';
+export const DEFAULT_HTTP_HOST = '127.0.0.1';
 
 function flagValue(args: string[], flag: string): string | undefined {
   const idx = args.indexOf(flag);
@@ -15,14 +16,15 @@ function flagValue(args: string[], flag: string): string | undefined {
 }
 
 /**
- * `--host` > `DOUBAN_HOST` > 127.0.0.1. The SSE endpoint has no auth of its own
- * and proxies a (possibly logged-in) Douban session, so it must not listen on all
- * interfaces unless the operator asks for it explicitly.
+ * `--host` > `DOUBAN_HOST` > 127.0.0.1. The HTTP endpoints have no auth of their
+ * own and proxy a (possibly logged-in) Douban session, so they must not listen on
+ * all interfaces unless the operator asks for it explicitly.
  */
 export function parseServeArgs(args: string[], env: NodeJS.ProcessEnv = process.env): ServeOpts {
-  const transport = flagValue(args, '--transport') === 'sse' ? 'sse' : 'stdio';
+  const raw = flagValue(args, '--transport');
+  const transport = raw === 'http' || raw === 'sse' ? raw : 'stdio';
   const port = parseInt(flagValue(args, '--port') ?? '', 10) || 3000;
-  const host = flagValue(args, '--host') || env.DOUBAN_HOST || DEFAULT_SSE_HOST;
+  const host = flagValue(args, '--host') || env.DOUBAN_HOST || DEFAULT_HTTP_HOST;
   return { transport, port, host };
 }
 
@@ -36,7 +38,7 @@ const LOOPBACK_ADDRESSES = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
  * operator bound a non-loopback host, since legitimate Host values are then
  * unknowable (and they were already warned about exposure).
  */
-export function sseTransportOptions(address: string, port: number): {
+export function httpTransportOptions(address: string, port: number): {
   enableDnsRebindingProtection: boolean; allowedHosts: string[]; allowedOrigins: string[];
 } | undefined {
   if (!LOOPBACK_ADDRESSES.has(address)) return undefined;
@@ -48,14 +50,15 @@ export function sseTransportOptions(address: string, port: number): {
   };
 }
 
-type SseOptions = NonNullable<ReturnType<typeof sseTransportOptions>>;
+type GuardOptions = NonNullable<ReturnType<typeof httpTransportOptions>>;
 
 /**
- * Mirror of the SDK's Host/Origin check. SSEServerTransport only runs it inside
- * handlePostMessage (POST /messages); the GET /sse handshake goes through
- * start(), which never sees the request, so we have to guard it ourselves.
+ * Same Host/Origin check the SDK runs inside the Streamable HTTP transport,
+ * applied once at the door for every route. The legacy SSE transport only
+ * validates on POST /messages, so GET /sse would otherwise be unguarded, and
+ * doing it here also keeps the 403 shape identical across endpoints.
  */
-function rejectedHeader(req: IncomingMessage, options: SseOptions | undefined): string | undefined {
+function rejectedHeader(req: IncomingMessage, options: GuardOptions | undefined): string | undefined {
   if (!options?.enableDnsRebindingProtection) return undefined;
   const host = req.headers.host;
   if (!host || !options.allowedHosts.includes(host)) return `Invalid Host header: ${host}`;
@@ -64,32 +67,105 @@ function rejectedHeader(req: IncomingMessage, options: SseOptions | undefined): 
   return undefined;
 }
 
-/** Build (but do not listen on) the HTTP server that fronts the SSE transport. */
-export async function createSseHttpServer(server: McpServer): Promise<HttpServer> {
-  const { SSEServerTransport } = await import('@modelcontextprotocol/sdk/server/sse.js');
-  const http = await import('http');
-  const transports = new Map<string, InstanceType<typeof SSEServerTransport>>();
-  const httpServer: HttpServer = http.createServer(async (req, res) => {
-    try {
-      if (req.method === 'GET' && req.url === '/sse') {
-        const bound = httpServer.address();
-        const options = bound && typeof bound === 'object' ? sseTransportOptions(bound.address, bound.port) : undefined;
-        const rejected = rejectedHeader(req, options);
-        if (rejected) {
-          logger.warn(`rejected SSE handshake: ${rejected}`);
-          res.writeHead(403).end(rejected);
-          return;
-        }
-        const transport = new SSEServerTransport('/messages', res, options);
-        transports.set(transport.sessionId, transport);
-        res.on('close', () => transports.delete(transport.sessionId));
-        await server.connect(transport);
+const MAX_BODY_BYTES = 1024 * 1024;
+
+function readJsonBody(req: IncomingMessage): Promise<unknown> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    let size = 0;
+    req.on('data', (c: Buffer) => {
+      size += c.length;
+      if (size > MAX_BODY_BYTES) {
+        reject(new Error('request body too large'));
+        req.destroy();
         return;
       }
-      if (req.method === 'POST' && req.url?.startsWith('/messages')) {
-        const url = new URL(req.url, 'http://x');
-        const sessionId = url.searchParams.get('sessionId') ?? '';
-        const transport = transports.get(sessionId);
+      chunks.push(c);
+    });
+    req.on('end', () => {
+      const text = Buffer.concat(chunks).toString('utf8');
+      if (!text) return resolve(undefined);
+      try { resolve(JSON.parse(text)); } catch { reject(new Error('invalid JSON body')); }
+    });
+    req.on('error', reject);
+  });
+}
+
+function jsonError(res: ServerResponse, status: number, code: number, message: string): void {
+  res.writeHead(status, { 'content-type': 'application/json' });
+  res.end(JSON.stringify({ jsonrpc: '2.0', error: { code, message }, id: null }));
+}
+
+/**
+ * Build (but do not listen on) the HTTP server that fronts the MCP transports.
+ *
+ * - `/mcp`            Streamable HTTP (2025-03-26+), stateful: one McpServer per
+ *                      `Mcp-Session-Id`, created on the `initialize` POST.
+ * - `/sse`, `/messages` Legacy HTTP+SSE (2024-11-05), one McpServer per stream.
+ *
+ * `newServer` is called per session because an McpServer owns exactly one
+ * transport: the SDK throws "Already connected" on a second connect(), which
+ * is what used to make a second concurrent SSE client fail with 500.
+ */
+export async function createMcpHttpServer(newServer: () => McpServer): Promise<HttpServer> {
+  const { StreamableHTTPServerTransport } = await import('@modelcontextprotocol/sdk/server/streamableHttp.js');
+  const { SSEServerTransport } = await import('@modelcontextprotocol/sdk/server/sse.js');
+  const { isInitializeRequest } = await import('@modelcontextprotocol/sdk/types.js');
+  const { randomUUID } = await import('crypto');
+  const http = await import('http');
+
+  const streamable = new Map<string, InstanceType<typeof StreamableHTTPServerTransport>>();
+  const legacy = new Map<string, InstanceType<typeof SSEServerTransport>>();
+
+  const httpServer: HttpServer = http.createServer(async (req, res) => {
+    try {
+      const bound = httpServer.address();
+      const options = bound && typeof bound === 'object' ? httpTransportOptions(bound.address, bound.port) : undefined;
+      const rejected = rejectedHeader(req, options);
+      if (rejected) {
+        logger.warn(`rejected ${req.method} ${req.url}: ${rejected}`);
+        res.writeHead(403).end(rejected);
+        return;
+      }
+      const path = new URL(req.url ?? '/', 'http://x').pathname;
+
+      if (path === '/mcp') {
+        const sessionId = req.headers['mcp-session-id'];
+        if (typeof sessionId === 'string') {
+          const transport = streamable.get(sessionId);
+          if (!transport) return jsonError(res, 404, -32001, 'Session not found');
+          await transport.handleRequest(req, res);
+          return;
+        }
+        if (req.method !== 'POST') return jsonError(res, 400, -32000, 'Bad Request: Mcp-Session-Id header is required');
+        const body = await readJsonBody(req).catch(e => e as Error);
+        if (body instanceof Error) return jsonError(res, 400, -32700, `Parse error: ${body.message}`);
+        const isInit = Array.isArray(body) ? body.some(isInitializeRequest) : isInitializeRequest(body);
+        if (!isInit) return jsonError(res, 400, -32000, 'Bad Request: Mcp-Session-Id header is required');
+
+        const transport = new StreamableHTTPServerTransport({
+          ...options,
+          sessionIdGenerator: () => randomUUID(),
+          onsessioninitialized: id => { streamable.set(id, transport); },
+          onsessionclosed: id => { streamable.delete(id); },
+        });
+        transport.onclose = () => { if (transport.sessionId) streamable.delete(transport.sessionId); };
+        await newServer().connect(transport);
+        await transport.handleRequest(req, res, body);
+        return;
+      }
+
+      if (req.method === 'GET' && path === '/sse') {
+        logger.warn('legacy SSE client connected on /sse; this transport is deprecated, point the client at /mcp');
+        const transport = new SSEServerTransport('/messages', res, options);
+        legacy.set(transport.sessionId, transport);
+        res.on('close', () => legacy.delete(transport.sessionId));
+        await newServer().connect(transport);
+        return;
+      }
+      if (req.method === 'POST' && path === '/messages') {
+        const sessionId = new URL(req.url ?? '/', 'http://x').searchParams.get('sessionId') ?? '';
+        const transport = legacy.get(sessionId);
         if (!transport) {
           res.writeHead(404).end('session not found');
           return;
@@ -99,7 +175,7 @@ export async function createSseHttpServer(server: McpServer): Promise<HttpServer
       }
       res.writeHead(404).end();
     } catch (e) {
-      logger.error(e, 'sse handler error');
+      logger.error(e, 'mcp http handler error');
       if (!res.headersSent) res.writeHead(500).end();
     }
   });
@@ -119,20 +195,24 @@ export async function runServe(args: string[]): Promise<void> {
     if (!me) logger.warn('DOUBAN_COOKIE present but appears expired; running anonymously.');
     else logger.info(`Logged in as ${me.name} (${me.uid})`);
   }
-  const server = buildServer({ dataSource, cookie, enableWrite });
+  // Data source, cache and rate limiter are shared; only the protocol layer is per session.
+  const newServer = () => buildServer({ dataSource, cookie, enableWrite });
 
   const opts = parseServeArgs(args);
-  if (opts.transport === 'sse') {
-    const httpServer = await createSseHttpServer(server);
-    httpServer.listen(opts.port, opts.host, () => {
-      const shown = opts.host.includes(':') ? `[${opts.host}]` : opts.host;
-      logger.info(`SSE listening on http://${shown}:${opts.port}/sse`);
-      if (opts.host === '0.0.0.0' || opts.host === '::') {
-        logger.warn('SSE endpoint is exposed on all interfaces and has no authentication; put it behind a firewall or reverse proxy.');
-      }
-    });
-  } else {
-    await server.connect(new StdioServerTransport());
+  if (opts.transport === 'stdio') {
+    await newServer().connect(new StdioServerTransport());
     logger.info('douban-mcp listening on stdio');
+    return;
   }
+  if (opts.transport === 'sse') {
+    logger.warn('--transport sse is deprecated; it now starts the same HTTP server as --transport http. Point clients at /mcp.');
+  }
+  const httpServer = await createMcpHttpServer(newServer);
+  httpServer.listen(opts.port, opts.host, () => {
+    const shown = opts.host.includes(':') ? `[${opts.host}]` : opts.host;
+    logger.info(`MCP Streamable HTTP listening on http://${shown}:${opts.port}/mcp (legacy SSE: /sse)`);
+    if (opts.host === '0.0.0.0' || opts.host === '::') {
+      logger.warn('HTTP endpoints are exposed on all interfaces and have no authentication; put them behind a firewall or reverse proxy.');
+    }
+  });
 }

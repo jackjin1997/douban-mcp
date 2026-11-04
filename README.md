@@ -4,7 +4,7 @@
 [![CI](https://github.com/jackjin1997/douban-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/jackjin1997/douban-mcp/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**面向 agent 的豆瓣 MCP 服务 + CLI**。同一个包既能做 Claude Desktop 的 MCP server（stdio/SSE），又能给 Claude Code/OpenClaw 等 agent 直接当 CLI 用。
+**面向 agent 的豆瓣 MCP 服务 + CLI**。同一个包既能做 Claude Desktop 的 MCP server（stdio / Streamable HTTP），又能给 Claude Code/OpenClaw 等 agent 直接当 CLI 用。
 
 > npm 包名为 `douban-mcp-cli`（裸名 `douban-mcp` 在 npm 已被他人占用）；GitHub 仓库 / 产品名仍为 `douban-mcp`。
 
@@ -13,7 +13,7 @@
 - ✅ 11 个匿名只读工具（电影 / 图书 / 用户态 全覆盖）+ 1 个登录态 cookie 自检工具
 - ✅ 4 个写工具（标记想看/在看/看过 + 打分 + 评论 + 标签），双模式 opt-in
 - ✅ 唯一数据源为 HTML（axios + cheerio）；原 Frodo App API 通道因服务端签名要求已移除
-- ✅ MCP server (stdio + SSE) + agent native CLI（`--json` 模式）
+- ✅ MCP server (stdio + Streamable HTTP，兼容旧 SSE) + agent native CLI（`--json` 模式）
 - ✅ Claude Code Skill 包随仓库交付
 - ✅ 内置缓存 + 限速 + 风控退避
 - ⏳ v1.1：覆盖率 90%+；user search、doulist items
@@ -114,19 +114,28 @@ v1.0 实测：**search-* 和 movie-chart top250 等聚合页匿名可用**；但
 | `DOUBAN_LOG_LEVEL` | `info` | debug/info/warn/error |
 | `DOUBAN_DISABLE_CACHE` | `false` | 关闭缓存（测试用） |
 | `DOUBAN_USER_AGENT` | 内置 Chrome UA | 覆盖默认 UA |
-| `DOUBAN_HOST` | `127.0.0.1` | SSE 模式监听地址（`--host` 优先） |
+| `DOUBAN_HOST` | `127.0.0.1` | HTTP 模式监听地址（`--host` 优先） |
 
-## 🔧 SSE 模式
+## 🔧 HTTP 模式（Streamable HTTP）
 
 ```bash
-npx -y douban-mcp-cli serve --transport sse --port 3000
-# 然后在 MCP 客户端连接 http://127.0.0.1:3000/sse
+npx -y douban-mcp-cli serve --transport http --port 3000
+# 然后在 MCP 客户端连接 http://127.0.0.1:3000/mcp
 ```
 
-默认只监听 `127.0.0.1`。SSE 端点本身没有鉴权，而且会代理你的豆瓣登录态，所以要暴露给其他机器时必须显式指定，并自行加防火墙或反向代理：
+同一个进程同时提供：
+
+| 端点 | 协议 | 状态 |
+|---|---|---|
+| `/mcp` | Streamable HTTP（2025-03-26+），`Mcp-Session-Id` 会话 | 推荐 |
+| `/sse` + `/messages` | HTTP+SSE（2024-11-05） | 已废弃，仅为旧客户端保留 |
+
+`--transport sse` 仍可用，但只是 `http` 的别名并打印废弃警告；请把客户端迁到 `/mcp`。每个会话独立一个 MCP server 实例，多个客户端可同时连接。
+
+默认只监听 `127.0.0.1`，并校验 `Host` / `Origin` 防 DNS rebinding。端点本身没有鉴权，而且会代理你的豆瓣登录态，所以要暴露给其他机器时必须显式指定，并自行加防火墙或反向代理：
 
 ```bash
-npx -y douban-mcp-cli serve --transport sse --port 3000 --host 0.0.0.0
+npx -y douban-mcp-cli serve --transport http --port 3000 --host 0.0.0.0
 ```
 
 ## 🧰 调试
