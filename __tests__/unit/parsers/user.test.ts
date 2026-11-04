@@ -16,8 +16,15 @@ describe('parseUserCollections (movie/collect)', () => {
 describe('parseUserProfile', () => {
   const profile = parseUserProfile(loadFixture('user/profile.html'));
   it('extracts uid and name', () => {
-    expect(profile.uid.length).toBeGreaterThan(0);
-    expect(profile.name.length).toBeGreaterThan(0);
+    expect(profile.uid).toBe('1524942');
+    expect(profile.name).toBe('山风如月');
+  });
+  it('signature is the h1 signature line, not the uid / join-date block', () => {
+    expect(profile.signature).toBe('海上去');
+  });
+  it('signature is undefined when the user has none', () => {
+    const html = loadFixture('user/profile.html').replace(/<div id="display" class="signature_display pl">[^<]*<\/div>/, '');
+    expect(parseUserProfile(html).signature).toBeUndefined();
   });
 });
 

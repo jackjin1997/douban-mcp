@@ -70,7 +70,9 @@ export function parseUserProfile(html: string): UserProfile {
 
   // 兜底：name 从 h1，uid 从 canonical/og:url/链接计数
   if (!name) {
-    const nameNode = $('#db-usr-profile .info h1, .user-info .info h1, .info h1, h1').first();
+    // h1 内嵌签名 div（<h1>昵称 <div id="display" class="signature_display pl">签名</div></h1>），先剔除
+    const nameNode = $('#db-usr-profile .info h1, .user-info .info h1, .info h1, h1').first().clone();
+    nameNode.find('.signature_display').remove();
     name = nameNode.text().trim().split('\n')[0].trim();
   }
   if (!uid) {
@@ -100,7 +102,9 @@ export function parseUserProfile(html: string): UserProfile {
     uid,
     name,
     avatar: $('#db-usr-profile .pic img, .basic-info img, .user-info img, .pic img').first().attr('src') ?? '',
-    signature: $('.user-info .pl, .signature, .intro').first().text().trim() || undefined,
+    // 签名在 .info h1 内的 #display.signature_display；旧选择器 .user-info .pl 命中的是
+    // 侧栏 "uid / 加入时间 / IP属地" 块，verified against the live page on 2026-11-04
+    signature: $('#display.signature_display, .signature_display, .info h1 .pl').first().text().trim() || undefined,
   };
 }
 
