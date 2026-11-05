@@ -2,29 +2,35 @@ name: Release
 on:
   push:
     tags: ['v*']
+
+# Three jobs so that the OIDC publish capability (id-token: write) is never
+# available while third-party code runs: dependency install, tests and the
+# build happen in `build` with read-only permissions; `publish` only downloads
+# the packed tarball and hands it to npm; `release` only needs contents: write.
 jobs:
-  publish:
+  build:
     runs-on: ubuntu-latest
-    # id-token: write lets npm authenticate this run via OIDC (trusted publishing);
-    # no NPM_TOKEN secret is used. The publisher is registered on npmjs.com under
-    # douban-mcp-cli → Settings → Trusted Publisher (jackjin1997/douban-mcp, release.yml).
-    permissions: { contents: write, id-token: write }
+    permissions: { contents: read }
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      dist_tag: ${{ steps.meta.outputs.tag }}
+      tarball: ${{ steps.meta.outputs.tarball }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
         with: { version: 9 }
       - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: pnpm, registry-url: 'https://registry.npmjs.org' }
-      # Trusted publishing needs npm >= 11.5.1; Node 22 bundles npm 10.
-      - run: npm install -g npm@latest && npm --version
+        with: { node-version: 22, cache: pnpm }
       - run: pnpm install --frozen-lockfile
+      - run: pnpm sync:version
+      - run: git diff --exit-code src/version.ts
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build:skill-md
       - run: git diff --exit-code skills/
       - run: pnpm build
-      - name: Determine npm dist-tag from package.json version
-        id: dist_tag
+      - name: Check tag, derive npm dist-tag, pack
+        id: meta
         run: |
           VERSION=$(node -p "require('./package.json').version")
           TAG_VERSION="${GITHUB_REF_NAME#v}"
@@ -38,14 +44,44 @@ jobs:
           else
             CHANNEL=latest
           fi
-          echo "tag=$CHANNEL" >> "$GITHUB_OUTPUT"
+          TARBALL=$(npm pack --ignore-scripts 2>/dev/null | tail -n1)
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "Publishing $VERSION to npm dist-tag '$CHANNEL'"
-      - name: Publish to npm (OIDC trusted publishing, provenance is automatic)
+          echo "tag=$CHANNEL" >> "$GITHUB_OUTPUT"
+          echo "tarball=$TARBALL" >> "$GITHUB_OUTPUT"
+          echo "Packed $TARBALL for npm dist-tag '$CHANNEL'"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: npm-tarball
+          path: ${{ steps.meta.outputs.tarball }}
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    # OIDC trusted publishing: the publisher is registered on npmjs.com under
+    # douban-mcp-cli → Settings → Trusted Publisher (jackjin1997/douban-mcp, release.yml).
+    # No NPM_TOKEN secret is used; provenance is attached automatically.
+    permissions: { id-token: write }
+    steps:
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, registry-url: 'https://registry.npmjs.org' }
+      # Trusted publishing needs npm >= 11.5.1; Node 22 bundles npm 10.
+      - run: npm install -g npm@latest && npm --version
+      - uses: actions/download-artifact@v4
+        with: { name: npm-tarball }
+      - name: Publish tarball to npm
         env:
-          DIST_TAG: ${{ steps.dist_tag.outputs.tag }}
-        run: npm publish --tag "$DIST_TAG" --access public
+          DIST_TAG: ${{ needs.build.outputs.dist_tag }}
+          TARBALL: ${{ needs.build.outputs.tarball }}
+        run: npm publish "./$TARBALL" --tag "$DIST_TAG" --access public --ignore-scripts
+
+  release:
+    needs: [build, publish]
+    runs-on: ubuntu-latest
+    permissions: { contents: write }
+    steps:
       - uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
-          prerelease: ${{ steps.dist_tag.outputs.tag != 'latest' }}
+          prerelease: ${{ needs.build.outputs.dist_tag != 'latest' }}
