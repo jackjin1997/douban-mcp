@@ -5,13 +5,18 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    # id-token: write lets npm authenticate this run via OIDC (trusted publishing);
+    # no NPM_TOKEN secret is used. The publisher is registered on npmjs.com under
+    # douban-mcp-cli → Settings → Trusted Publisher (jackjin1997/douban-mcp, release.yml).
     permissions: { contents: write, id-token: write }
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
         with: { version: 9 }
       - uses: actions/setup-node@v4
-        with: { node-version: 20, cache: pnpm, registry-url: 'https://registry.npmjs.org' }
+        with: { node-version: 22, cache: pnpm, registry-url: 'https://registry.npmjs.org' }
+      # Trusted publishing needs npm >= 11.5.1; Node 22 bundles npm 10.
+      - run: npm install -g npm@latest && npm --version
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
       - run: pnpm test
@@ -22,6 +27,11 @@ jobs:
         id: dist_tag
         run: |
           VERSION=$(node -p "require('./package.json').version")
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          if [[ "$VERSION" != "$TAG_VERSION" ]]; then
+            echo "::error::git tag $GITHUB_REF_NAME does not match package.json version $VERSION"
+            exit 1
+          fi
           if [[ "$VERSION" == *-* ]]; then
             # Prerelease (e.g. 1.0.0-alpha.0 / 1.0.0-rc.1) → channel = first identifier after `-`
             CHANNEL=$(printf '%s' "$VERSION" | sed -E 's/^[^-]+-([a-zA-Z]+).*$/\1/')
@@ -31,11 +41,10 @@ jobs:
           echo "tag=$CHANNEL" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Publishing $VERSION to npm dist-tag '$CHANNEL'"
-      - name: Publish to npm
+      - name: Publish to npm (OIDC trusted publishing, provenance is automatic)
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           DIST_TAG: ${{ steps.dist_tag.outputs.tag }}
-        run: pnpm publish --tag "$DIST_TAG" --access public --no-git-checks --provenance
+        run: npm publish --tag "$DIST_TAG" --access public
       - uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
