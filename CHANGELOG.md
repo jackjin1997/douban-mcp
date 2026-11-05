@@ -4,6 +4,10 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ## [Unreleased]
 
+## [1.0.0] — 2026-11-05
+
+First stable release. Everything below is relative to `1.0.0-alpha.0`.
+
 ### Removed
 - `FrodoDataSource` (the `frodo.douban.com` App API channel) and the `DOUBAN_EXPERIMENTAL_FRODO` / `DOUBAN_FRODO_APIKEY` variables. Douban requires a request signature for Frodo that was never reverse-engineered, so the channel could not serve a single real request. `DOUBAN_DATA_SOURCE=frodo` still fails fast with `AUTH_FAILED` and a message pointing at `html`; `doctor` reports it under `data_source`.
 
