@@ -74,7 +74,11 @@ jobs:
         env:
           DIST_TAG: ${{ needs.build.outputs.dist_tag }}
           TARBALL: ${{ needs.build.outputs.tarball }}
-        run: npm publish "./$TARBALL" --tag "$DIST_TAG" --access public --ignore-scripts
+          # npm's OIDC exchange never throws: on failure it logs at verbose level
+          # and silently falls back to whatever token is configured. Keep the
+          # reason visible in the run log.
+          NPM_CONFIG_LOGLEVEL: verbose
+        run: npm publish "./$TARBALL" --tag "$DIST_TAG" --access public --ignore-scripts 2>&1 | grep -v -E 'verb (http|fetch|cache|title|argv|logfile|audit|reify|packumentCache)' ; exit ${PIPESTATUS[0]}
 
   release:
     needs: [build, publish]
