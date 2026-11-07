@@ -52,6 +52,18 @@ describe('HtmlDataSource.markSubject', () => {
     expect(url).toContain('book.douban.com/j/subject/999/');
   });
 
+  it.each(['wish', 'do', 'collect'] as const)(
+    'POSTs status=%s to the fixed /interest endpoint (status goes in the form, not the path)',
+    async (status) => {
+      mockedAxios.post.mockResolvedValue({ status: 200, data: { r: 0 } });
+      const ds = makeDS('bid=x; dbcl2="1:y"; ck=CSRF');
+      await ds.markSubject('movie', '38397487', status, {});
+      const [url, body] = (mockedAxios.post as jest.Mock).mock.calls[0];
+      expect(url).toBe('https://movie.douban.com/j/subject/38397487/interest');
+      expect((body as URLSearchParams).get('interest')).toBe(status);
+    },
+  );
+
   it('invalidates own collection cache after success', async () => {
     mockedAxios.post.mockResolvedValue({ status: 200, data: { r: 0 } });
     const ds = makeDS('bid=x; dbcl2="42:y"; ck=CSRF');

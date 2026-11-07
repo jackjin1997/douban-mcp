@@ -274,8 +274,8 @@ export class HtmlDataSource implements IDoubanDataSource {
     if (options.tags?.length) params.set('tags', options.tags.join(' '));
     params.set('share-shuo', options.shareToFeed ? 'douban' : '');
 
-    const path = status === 'wish' ? 'wish' : status === 'do' ? 'do' : 'collect';
-    const url = `https://${domain}/j/subject/${id}/${path}`;
+    // Douban's mark endpoint is fixed; the status travels in the `interest` form field.
+    const url = `https://${domain}/j/subject/${id}/interest`;
     const res = await this.http.post(url, params, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',

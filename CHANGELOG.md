@@ -4,6 +4,9 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ## [Unreleased]
 
+### Fixed
+- `mark_movie` / `mark_book` always returned `HTTP 404`: the status was appended to the URL path (`/j/subject/<id>/collect`), but Douban's mark endpoint is the fixed `/j/subject/<id>/interest`, with the status already sent in the `interest` form field (#4).
+
 ## [1.0.0] — 2026-11-05
 
 First stable release. Everything below is relative to `1.0.0-alpha.0`.
