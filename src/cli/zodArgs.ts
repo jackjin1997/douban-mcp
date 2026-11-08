@@ -23,7 +23,7 @@ export function applyZodOptions(cmd: Command, schema: z.ZodObject<any>): void {
     } else if (inner instanceof z.ZodArray) {
       cmd.option(`${flag} <csv>`, `${key} (comma-separated)`);
     } else if (inner instanceof z.ZodEnum) {
-      const values = (inner as any)._def.values as string[];
+      const values = (inner as z.ZodEnum).options as string[];
       cmd.option(`${flag} <value>`, `${key} (${values.join('|')})`);
     } else {
       cmd.option(`${flag} <value>`, key);
