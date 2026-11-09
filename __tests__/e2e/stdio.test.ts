@@ -21,8 +21,17 @@ describe('stdio MCP server e2e', () => {
     // Write a tools/list JSON-RPC request
     child.stdin.write(JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} }) + '\n');
 
-    // Wait up to 2.5s for response
-    await new Promise(r => setTimeout(r, 2500));
+    // Wait for the response itself rather than a fixed sleep: cold start is
+    // ~2-2.5s on a loaded laptop, so a fixed 2.5s window made this flaky.
+    await new Promise<void>(resolve => {
+      const timer = setTimeout(resolve, 15_000);
+      child.stdout.on('data', () => {
+        if (stdout.includes('"name":"search_movie"')) {
+          clearTimeout(timer);
+          resolve();
+        }
+      });
+    });
     child.kill('SIGTERM');
     await new Promise(r => child.on('close', r));
 
