@@ -4,13 +4,17 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ## [Unreleased]
 
-### Security
-- Upgraded `@modelcontextprotocol/sdk` to `^1.32.2` and `axios` to `^1.21.0`, and refreshed transitive dependencies (express, body-parser, hono, fast-uri, proxy-addr, undici, form-data). `pnpm audit --prod` goes from 127 findings (2 critical, 39 high) to 0.
-- Upgraded `zod` to v4 to pick up the fix for unbounded memory use when validating oversized arrays (GHSA-mrhx-c7xc-m3w5).
-
 ### Changed
 - Tool input schemas no longer advertise `additionalProperties: false`. Unknown arguments were always stripped at runtime, so the schema now matches the actual behaviour; integer fields with only a lower bound now carry the JS safe-integer maximum.
 - Runtime dependencies: `commander` 14, `dotenv` 18, `pino` 10. Node `>=20` is unchanged (`commander` 15 would require Node 22.12, so it is held back).
+
+### Fixed
+- `mark_movie` / `mark_book` always returned `HTTP 404`: the status was appended to the URL path (`/j/subject/<id>/collect`), but Douban's mark endpoint is the fixed `/j/subject/<id>/interest`, with the status already sent in the `interest` form field (#4).
+- A write refused with JSON `403 {r:1, code:403}` (not logged in or stale `ck`) was reported as `RATE_LIMITED` and locked writes for the rest of the session. It is now `AUTH_FAILED`, and a refreshed cookie can write again without a restart; bare 401/403 and challenge pages still count as risk control.
+
+### Security
+- Upgraded `@modelcontextprotocol/sdk` to `^1.32.2` and `axios` to `^1.21.0`, and refreshed transitive dependencies (express, body-parser, hono, fast-uri, proxy-addr, undici, form-data). `pnpm audit --prod` goes from 127 findings (2 critical, 39 high) to 0.
+- Upgraded `zod` to v4 to pick up the fix for unbounded memory use when validating oversized arrays (GHSA-mrhx-c7xc-m3w5).
 
 ## [1.0.0] — 2026-11-05
 
