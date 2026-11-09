@@ -4,6 +4,12 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ## [Unreleased]
 
+## [1.0.1] — 2026-11-09
+
+Makes `mark_movie` / `mark_book` work for the first time (they returned HTTP 404 in every earlier release) and clears all production audit findings.
+
+Known issue: `unmark_movie` / `unmark_book` still fail with `NOT_FOUND`. Douban answers 404 on `/j/subject/<id>/remove`, and the correct endpoint has not been identified yet.
+
 ### Changed
 - Tool input schemas no longer advertise `additionalProperties: false`. Unknown arguments were always stripped at runtime, so the schema now matches the actual behaviour; integer fields with only a lower bound now carry the JS safe-integer maximum.
 - Runtime dependencies: `commander` 14, `dotenv` 18, `pino` 10. Node `>=20` is unchanged (`commander` 15 would require Node 22.12, so it is held back).
