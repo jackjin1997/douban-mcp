@@ -8,7 +8,7 @@ export function registerUserTools(ds: IDoubanDataSource, opts: { cookie?: string
   // required otherwise.
   const uidSchema = opts.cookie
     ? z.string().optional()
-    : z.string({ required_error: '未配置 cookie 时必须传入 uid' });
+    : z.string({ error: issue => (issue.input === undefined ? '未配置 cookie 时必须传入 uid' : undefined) });
 
   return [
     {
