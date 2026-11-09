@@ -134,7 +134,16 @@ describe('HtmlDataSource.markSubject', () => {
       await expect(makeDS(ck).markSubject('movie', '1', 'collect', {})).rejects.toBeInstanceOf(WriteRejectedError);
     });
 
-    it('404 + {r:1, code:404} (observed live 2026-11-04) is NotFoundError', async () => {
+    it('403 + {r:1, code:403} (anonymous / stale ck, observed live on /interest 2026-11-08) is AuthError without a write lock', async () => {
+      mockedAxios.post.mockResolvedValue({ status: 403, data: { r: 1, code: 403 } });
+      const ds = makeDS(ck);
+      await expect(ds.markSubject('movie', '1', 'collect', {})).rejects.toBeInstanceOf(AuthError);
+      // A refreshed cookie must be able to write again in the same session.
+      mockedAxios.post.mockResolvedValue({ status: 200, data: { r: 0 } });
+      await expect(ds.markSubject('movie', '2', 'collect', {})).resolves.toBeUndefined();
+    });
+
+    it('404 + {r:1, code:404} (unknown subject or endpoint) is NotFoundError', async () => {
       mockedAxios.post.mockResolvedValue({ status: 404, data: { r: 1, code: 404 } });
       await expect(makeDS(ck).markSubject('movie', '1', 'collect', {})).rejects.toBeInstanceOf(NotFoundError);
     });

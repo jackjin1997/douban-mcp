@@ -216,10 +216,12 @@ export class HtmlDataSource implements IDoubanDataSource {
   }
   /**
    * A write only counts as done when Douban says so. The j/subject endpoints
-   * answer JSON `{r: 0}` on success and `{r: 1, err|code}` on refusal (observed
-   * live 2026-11-04: anonymous POST → 404 `{"r":1,"code":404}`); risk control
-   * and expired cookies instead come back as 200 + HTML or a redirect, which
-   * the old `status < 400` check happily reported as success.
+   * answer JSON `{r: 0}` on success and `{r: 1, err|code}` on refusal. Observed
+   * live with anonymous POSTs (2026-11-08): `/interest` → 403 `{"r":1,"code":403}`
+   * (not logged in / bad ck), an unknown path such as `/collect` → 404
+   * `{"r":1,"code":404}`. Risk control comes back as an HTML challenge, a
+   * sec.douban.com redirect or a bare 401/403, which the old `status < 400`
+   * check happily reported as success.
    */
   private assertWriteAccepted(res: AxiosResponse, domain: string, url: string): void {
     const finalUrl: string = (res.request as { res?: { responseUrl?: string } })?.res?.responseUrl ?? url;
@@ -229,9 +231,17 @@ export class HtmlDataSource implements IDoubanDataSource {
       throw new RateLimitError(`write blocked by risk control (${why}); session write lock engaged`);
     };
 
+    const body: unknown = res.data;
+    const isJsonRefusal = !!body && typeof body === 'object' && 'r' in body;
+
+    // A JSON {r:1,code:403} is Douban saying "not logged in / ck invalid": a
+    // cookie problem the user fixes by refreshing DOUBAN_COOKIE, so it must not
+    // engage the session write lock that real risk control does.
+    if ((res.status === 401 || res.status === 403) && isJsonRefusal) {
+      throw new AuthError(`douban refused write with HTTP ${res.status}; cookie or ck token likely expired`);
+    }
     if (res.status === 401 || res.status === 403) blockedByRiskControl(`HTTP ${res.status}`);
 
-    const body: unknown = res.data;
     if (typeof body === 'string') {
       if (isPowChallenge(body, finalUrl)) blockedByRiskControl(`challenge page at ${finalUrl}`);
       if (/accounts\.douban\.com|\/accounts\/login/.test(finalUrl)) {
