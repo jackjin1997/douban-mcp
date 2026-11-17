@@ -4,6 +4,10 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ## [Unreleased]
 
+## [1.0.2] — 2026-11-17
+
+Fixes `unmark_movie` / `unmark_book`, which failed for every subject in earlier releases. Each removal is now confirmed against the state Douban actually kept, so a removal that did not happen is reported instead of passing silently.
+
 ### Fixed
 - `unmark_movie` / `unmark_book` always failed with `NOT_FOUND`: Douban has no `/j/` JSON remove endpoint, so `/j/subject/<id>/remove` answered 404 for every subject. Removal now posts to the page-level form endpoint `/subject/<id>/remove` (#6).
 - That form endpoint answers HTML, so a removal is now confirmed by reading the subject's interest state back (`/j/subject/<id>/interest`). A removal that did not take effect is reported as `WRITE_REJECTED` instead of success.
