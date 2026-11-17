@@ -4,6 +4,11 @@ All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.
 
 ## [Unreleased]
 
+### Fixed
+- `unmark_movie` / `unmark_book` always failed with `NOT_FOUND`: Douban has no `/j/` JSON remove endpoint, so `/j/subject/<id>/remove` answered 404 for every subject. Removal now posts to the page-level form endpoint `/subject/<id>/remove` (#6).
+- That form endpoint answers HTML, so a removal is now confirmed by reading the subject's interest state back (`/j/subject/<id>/interest`). A removal that did not take effect is reported as `WRITE_REJECTED` instead of success.
+- An HTML 403 page titled 没有访问权限 (not logged in or stale `ck`) is now `AUTH_FAILED` for both mark and unmark, and no longer locks writes for the rest of the session.
+
 ## [1.0.1] — 2026-11-09
 
 Makes `mark_movie` / `mark_book` work for the first time (they returned HTTP 404 in every earlier release) and clears all production audit findings.
