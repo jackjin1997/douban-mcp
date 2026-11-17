@@ -7,6 +7,9 @@ import { AuthError, RateLimitError, NotFoundError, ParseError, WriteRejectedErro
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
+const NO_PERMISSION_HTML =
+  '<!DOCTYPE html><html><head><title>没有访问权限</title></head><body>你没有权限访问这个页面。请登录后重试。</body></html>';
+
 function makeDS(cookie?: string) {
   (mockedAxios.create as jest.Mock).mockReturnValue(mockedAxios);
   return new HtmlDataSource({
@@ -143,6 +146,14 @@ describe('HtmlDataSource.markSubject', () => {
       await expect(ds.markSubject('movie', '2', 'collect', {})).resolves.toBeUndefined();
     });
 
+    it('HTML 403 "没有访问权限" page (anonymous / stale ck) is AuthError without a write lock', async () => {
+      mockedAxios.post.mockResolvedValue({ status: 403, data: NO_PERMISSION_HTML });
+      const ds = makeDS(ck);
+      await expect(ds.markSubject('movie', '1', 'collect', {})).rejects.toBeInstanceOf(AuthError);
+      mockedAxios.post.mockResolvedValue({ status: 200, data: { r: 0 } });
+      await expect(ds.markSubject('movie', '2', 'collect', {})).resolves.toBeUndefined();
+    });
+
     it('404 + {r:1, code:404} (unknown subject or endpoint) is NotFoundError', async () => {
       mockedAxios.post.mockResolvedValue({ status: 404, data: { r: 1, code: 404 } });
       await expect(makeDS(ck).markSubject('movie', '1', 'collect', {})).rejects.toBeInstanceOf(NotFoundError);
@@ -151,24 +162,121 @@ describe('HtmlDataSource.markSubject', () => {
 });
 
 describe('HtmlDataSource.unmarkSubject', () => {
-  beforeEach(() => mockedAxios.post.mockReset());
+  const ck = 'bid=x; dbcl2="1:y"; ck=CSRF';
+  // GET /j/subject/<id>/interest after the removal: the state Douban actually kept.
+  const readBack = (data: unknown, status = 200) => mockedAxios.get.mockResolvedValue({ status, data });
+  const UNMARKED = { interest_status: '', html: '<form><input type="radio" name="interest" value="wish"><input type="radio" name="interest" value="collect"></form>' };
 
-  it('POSTs to /remove endpoint', async () => {
-    mockedAxios.post.mockResolvedValue({ status: 200, data: { r: 0 } });
-    const ds = makeDS('bid=x; dbcl2="1:y"; ck=CSRF');
-    await ds.unmarkSubject('movie', '1234');
-    const [url, body] = (mockedAxios.post as jest.Mock).mock.calls.at(-1)!;
-    expect(url).toContain('/1234/remove');
+  beforeEach(() => {
+    mockedAxios.post.mockReset();
+    mockedAxios.get.mockReset();
+  });
+
+  it('POSTs to the page-level /subject/{id}/remove endpoint (no /j/ prefix)', async () => {
+    mockedAxios.post.mockResolvedValue({ status: 200, data: '<html>subject page</html>' });
+    readBack(UNMARKED);
+    await makeDS(ck).unmarkSubject('movie', '1234');
+    const [url, body, cfg] = (mockedAxios.post as jest.Mock).mock.calls.at(-1)!;
+    expect(url).toBe('https://movie.douban.com/subject/1234/remove');
     expect((body as URLSearchParams).toString()).toContain('ck=CSRF');
+    expect(cfg.headers['Origin']).toBe('https://movie.douban.com');
+  });
+
+  it('uses book.douban.com for the book category, for both the removal and the read-back', async () => {
+    mockedAxios.post.mockResolvedValue({ status: 200, data: '<html>subject page</html>' });
+    readBack(UNMARKED);
+    await makeDS(ck).unmarkSubject('book', '999');
+    expect((mockedAxios.post as jest.Mock).mock.calls.at(-1)![0]).toBe('https://book.douban.com/subject/999/remove');
+    expect((mockedAxios.get as jest.Mock).mock.calls.at(-1)![0]).toBe('https://book.douban.com/j/subject/999/interest');
+  });
+
+  describe('success is decided by reading the state back, not by where the POST landed', () => {
+    it('resolves when the read-back shows no interest status', async () => {
+      mockedAxios.post.mockResolvedValue({
+        status: 200, data: '<html>subject page</html>',
+        request: { res: { responseUrl: 'https://movie.douban.com/subject/1234/' } },
+      });
+      readBack(UNMARKED);
+      await expect(makeDS(ck).unmarkSubject('movie', '1234')).resolves.toBeUndefined();
+      expect((mockedAxios.get as jest.Mock).mock.calls.at(-1)![0]).toBe('https://movie.douban.com/j/subject/1234/interest');
+    });
+
+    it('rejects when the subject is still marked, even after a redirect back to the subject page', async () => {
+      mockedAxios.post.mockResolvedValue({
+        status: 200, data: '<html>subject page</html>',
+        request: { res: { responseUrl: 'https://movie.douban.com/subject/1234/' } },
+      });
+      readBack({ interest_status: 'collect' });
+      await expect(makeDS(ck).unmarkSubject('movie', '1234'))
+        .rejects.toMatchObject({ constructor: WriteRejectedError, message: expect.stringContaining('collect') });
+    });
+
+    it('rejects a 200 page that never left the POST URL when the subject is still marked', async () => {
+      mockedAxios.post.mockResolvedValue({
+        status: 200, data: '<html>error</html>',
+        request: { res: { responseUrl: 'https://movie.douban.com/subject/1234/remove' } },
+      });
+      readBack({ interest_status: 'wish' });
+      await expect(makeDS(ck).unmarkSubject('movie', '1234')).rejects.toBeInstanceOf(WriteRejectedError);
+    });
+
+    it('rejects a landing on another subject (/subject/12345/) when the subject is still marked', async () => {
+      mockedAxios.post.mockResolvedValue({
+        status: 200, data: '<html>other subject</html>',
+        request: { res: { responseUrl: 'https://movie.douban.com/subject/12345/' } },
+      });
+      readBack({ interest_status: 'do' });
+      await expect(makeDS(ck).unmarkSubject('movie', '1234')).rejects.toBeInstanceOf(WriteRejectedError);
+    });
+
+    it('falls back to the checked radio in the dialog html when interest_status is absent', async () => {
+      mockedAxios.post.mockResolvedValue({ status: 200, data: '<html>subject page</html>' });
+      readBack({ html: '<form><input type="radio" name="interest" value="wish" checked="checked"></form>' });
+      await expect(makeDS(ck).unmarkSubject('movie', '1')).rejects.toBeInstanceOf(WriteRejectedError);
+      readBack({ html: '<form><input type="radio" name="interest" value="wish"></form>' });
+      await expect(makeDS(ck).unmarkSubject('movie', '1')).resolves.toBeUndefined();
+    });
+
+    it('a read-back without interest_status or html cannot confirm the removal: ParseError', async () => {
+      mockedAxios.post.mockResolvedValue({ status: 200, data: '<html>subject page</html>' });
+      readBack({});
+      await expect(makeDS(ck).unmarkSubject('movie', '1')).rejects.toBeInstanceOf(ParseError);
+      readBack('<html>not json</html>');
+      await expect(makeDS(ck).unmarkSubject('movie', '1')).rejects.toBeInstanceOf(ParseError);
+    });
+
+    it('invalidates the own collection cache only after a verified removal', async () => {
+      mockedAxios.post.mockResolvedValue({ status: 200, data: '<html>subject page</html>' });
+      const ds = makeDS('bid=x; dbcl2="42:y"; ck=CSRF');
+      const key = 'html:getUserCollections:42:movie:collect:0:15';
+      await (ds as any).opts.cache.wrap(key, 60, async () => 'cached');
+      readBack({ interest_status: 'collect' });
+      await expect(ds.unmarkSubject('movie', '1')).rejects.toBeInstanceOf(WriteRejectedError);
+      expect((ds as any).opts.cache.has(key)).toBe(true);
+      readBack(UNMARKED);
+      await ds.unmarkSubject('movie', '1');
+      expect((ds as any).opts.cache.has(key)).toBe(false);
+    });
+  });
+
+  it('HTML 403 "没有访问权限" page (anonymous / stale ck) is AuthError without a write lock', async () => {
+    mockedAxios.post.mockResolvedValue({ status: 403, data: NO_PERMISSION_HTML });
+    const ds = makeDS(ck);
+    await expect(ds.unmarkSubject('book', '999')).rejects.toBeInstanceOf(AuthError);
+    expect(mockedAxios.get).not.toHaveBeenCalled();
+    mockedAxios.post.mockResolvedValue({ status: 200, data: '<html>subject page</html>' });
+    readBack(UNMARKED);
+    await expect(ds.unmarkSubject('book', '999')).resolves.toBeUndefined();
   });
 
   it('200 + risk-control HTML is RateLimitError, not success', async () => {
     mockedAxios.post.mockResolvedValue({ status: 200, data: '<html><script>var verifyToken="x"</script></html>' });
-    await expect(makeDS('bid=x; dbcl2="1:y"; ck=CSRF').unmarkSubject('movie', '1')).rejects.toBeInstanceOf(RateLimitError);
+    await expect(makeDS(ck).unmarkSubject('movie', '1')).rejects.toBeInstanceOf(RateLimitError);
+    expect(mockedAxios.get).not.toHaveBeenCalled();
   });
 
   it('200 + {r:1} is WriteRejectedError', async () => {
     mockedAxios.post.mockResolvedValue({ status: 200, data: { r: 1, err: 'not marked' } });
-    await expect(makeDS('bid=x; dbcl2="1:y"; ck=CSRF').unmarkSubject('movie', '1')).rejects.toBeInstanceOf(WriteRejectedError);
+    await expect(makeDS(ck).unmarkSubject('movie', '1')).rejects.toBeInstanceOf(WriteRejectedError);
   });
 });

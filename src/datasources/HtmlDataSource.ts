@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import * as cheerio from 'cheerio';
 import type {
   IDoubanDataSource, SubjectSummary, MovieDetail, MovieChartKind,
   Review, BookDetail, BookChartKind, Collection, CollectionStatus,
@@ -215,15 +216,18 @@ export class HtmlDataSource implements IDoubanDataSource {
     });
   }
   /**
-   * A write only counts as done when Douban says so. The j/subject endpoints
-   * answer JSON `{r: 0}` on success and `{r: 1, err|code}` on refusal. Observed
-   * live with anonymous POSTs (2026-11-08): `/interest` → 403 `{"r":1,"code":403}`
-   * (not logged in / bad ck), an unknown path such as `/collect` → 404
-   * `{"r":1,"code":404}`. Risk control comes back as an HTML challenge, a
-   * sec.douban.com redirect or a bare 401/403, which the old `status < 400`
-   * check happily reported as success.
+   * Turn the responses Douban uses to *block* a write into typed errors, and
+   * return the final URL. Shared by the JSON endpoints (mark) and the
+   * page-level form endpoint (unmark).
+   *
+   * Observed live with anonymous requests: `/j/subject/<id>/interest` → 403
+   * `{"r":1,"code":403}` (2026-11-08); `book.douban.com/subject/<id>/remove`
+   * → 403 HTML titled 没有访问权限 (2026-11-17). Both mean "not logged in or
+   * stale ck", a cookie problem the user fixes by refreshing DOUBAN_COOKIE,
+   * so neither may engage the session write lock that real risk control
+   * (challenge page, sec.douban.com redirect, bare 401/403) does.
    */
-  private assertWriteAccepted(res: AxiosResponse, domain: string, url: string): void {
+  private rejectBlockedResponse(res: AxiosResponse, domain: string, url: string): string {
     const finalUrl: string = (res.request as { res?: { responseUrl?: string } })?.res?.responseUrl ?? url;
     const blockedByRiskControl = (why: string): never => {
       this.opts.rateLimiter.markCooldown(domain);
@@ -232,25 +236,29 @@ export class HtmlDataSource implements IDoubanDataSource {
     };
 
     const body: unknown = res.data;
-    const isJsonRefusal = !!body && typeof body === 'object' && 'r' in body;
-
-    // A JSON {r:1,code:403} is Douban saying "not logged in / ck invalid": a
-    // cookie problem the user fixes by refreshing DOUBAN_COOKIE, so it must not
-    // engage the session write lock that real risk control does.
-    if ((res.status === 401 || res.status === 403) && isJsonRefusal) {
-      throw new AuthError(`douban refused write with HTTP ${res.status}; cookie or ck token likely expired`);
+    if (res.status === 401 || res.status === 403) {
+      const isJsonRefusal = !!body && typeof body === 'object' && 'r' in body;
+      const isNoPermissionPage = typeof body === 'string' && body.includes('没有访问权限');
+      if (isJsonRefusal || isNoPermissionPage) {
+        throw new AuthError(`douban refused write with HTTP ${res.status}; cookie or ck token likely expired`);
+      }
+      blockedByRiskControl(`HTTP ${res.status}`);
     }
-    if (res.status === 401 || res.status === 403) blockedByRiskControl(`HTTP ${res.status}`);
-
     if (typeof body === 'string') {
       if (isPowChallenge(body, finalUrl)) blockedByRiskControl(`challenge page at ${finalUrl}`);
       if (/accounts\.douban\.com|\/accounts\/login/.test(finalUrl)) {
         throw new AuthError(`write redirected to login page (${finalUrl}); cookie likely expired`);
       }
-      throw new ParseError(`write endpoint returned non-JSON body (HTTP ${res.status}) at ${finalUrl}`);
     }
+    return finalUrl;
+  }
 
-    const j = (body && typeof body === 'object' ? body : {}) as { r?: unknown; err?: unknown; msg?: unknown; code?: unknown };
+  /**
+   * The /j/ JSON endpoints answer `{r: 0}` on success and `{r: 1, err|code}`
+   * on refusal; an unknown path such as `/collect` → 404 `{"r":1,"code":404}`.
+   */
+  private assertJsonAck(res: AxiosResponse, url: string): void {
+    const j = (res.data && typeof res.data === 'object' ? res.data : {}) as { r?: unknown; err?: unknown; msg?: unknown; code?: unknown };
     if (j.r === 0) return;
 
     const detail = j.err != null ? String(j.err)
@@ -261,6 +269,56 @@ export class HtmlDataSource implements IDoubanDataSource {
     if (res.status === 404) throw new NotFoundError(`write endpoint 404 at ${url} (${detail})`);
     if (res.status >= 400) throw new NetworkError(`HTTP ${res.status} at ${url} (${detail})`);
     throw new WriteRejectedError(detail);
+  }
+
+  /**
+   * A write only counts as done when Douban says so: the old `status < 400`
+   * check reported risk-control pages and expired cookies as success.
+   */
+  private assertWriteAccepted(res: AxiosResponse, domain: string, url: string): void {
+    const finalUrl = this.rejectBlockedResponse(res, domain, url);
+    if (typeof res.data === 'string') {
+      throw new ParseError(`write endpoint returned non-JSON body (HTTP ${res.status}) at ${finalUrl}`);
+    }
+    this.assertJsonAck(res, url);
+  }
+
+  /**
+   * Read back the interest state Douban actually kept for a subject: the same
+   * GET the collect dialog makes. Returns `wish` / `do` / `collect`, or null
+   * when the subject is not marked. The JSON carries `interest_status`, or for
+   * older responses only the dialog `html`, whose checked radio is the state
+   * (the shape wastedwood/DouBanSync relies on).
+   */
+  private async readInterestStatus(domain: string, id: string): Promise<string | null> {
+    await this.opts.rateLimiter.acquireRead(domain);
+    const url = `https://${domain}/j/subject/${id}/interest`;
+    const res = await this.http.get(url, {
+      headers: {
+        'Referer': `https://${domain}/subject/${id}/`,
+        'X-Requested-With': 'XMLHttpRequest',
+        'Cookie': this.cookies.toHeader(),
+      },
+    }).catch((e: unknown) => {
+      const msg = e instanceof Error ? e.message : 'network error';
+      throw new NetworkError(msg);
+    });
+
+    const finalUrl = this.rejectBlockedResponse(res, domain, url);
+    if (res.status === 404) throw new NotFoundError(`subject ${id} not found at ${url}`);
+    if (res.status >= 400) throw new NetworkError(`HTTP ${res.status} at ${url}`);
+
+    const body: unknown = res.data;
+    if (!body || typeof body !== 'object') {
+      throw new ParseError(`could not verify the interest state: non-JSON answer (HTTP ${res.status}) at ${finalUrl}`);
+    }
+    const j = body as { interest_status?: unknown; html?: unknown };
+    if (typeof j.interest_status === 'string' && j.interest_status) return j.interest_status;
+    if (typeof j.html === 'string') {
+      return cheerio.load(j.html)('input[name="interest"][checked]').attr('value') || null;
+    }
+    if ('interest_status' in j) return null;
+    throw new ParseError(`could not verify the interest state: answer has neither interest_status nor html at ${url}`);
   }
 
   async markSubject(
@@ -314,11 +372,16 @@ export class HtmlDataSource implements IDoubanDataSource {
     const params = new URLSearchParams();
     params.set('ck', ck);
 
-    const url = `https://${domain}/j/subject/${id}/remove`;
+    // Douban has no /j/ JSON remove endpoint — /j/subject/{id}/remove answers
+    // 404 {"r":1,"code":404} for every subject (verified live 2026-11-17).
+    // The working endpoint is the page-level form POST /subject/{id}/remove,
+    // same as DouBanSync and MoviePilot's douban plugin use.
+    const url = `https://${domain}/subject/${id}/remove`;
     const res = await this.http.post(url, params, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Referer': `https://${domain}/subject/${id}/`,
+        'Origin': `https://${domain}`,
         'Cookie': this.cookies.toHeader(),
       },
     }).catch((e: unknown) => {
@@ -326,7 +389,17 @@ export class HtmlDataSource implements IDoubanDataSource {
       throw new NetworkError(msg);
     });
 
-    this.assertWriteAccepted(res, domain, url);
+    // The form endpoint answers HTML (a 302 back to the subject page when it
+    // works), so where the POST lands proves nothing: an error page, or a
+    // redirect that removed nothing, looks the same. Only reject what clearly
+    // blocked the request here, then decide by the state Douban actually kept.
+    this.rejectBlockedResponse(res, domain, url);
+    if (res.data && typeof res.data === 'object' && 'r' in res.data) this.assertJsonAck(res, url);
+    else if (res.status === 404) throw new NotFoundError(`subject ${id} not found at ${url}`);
+    else if (res.status >= 400) throw new NetworkError(`HTTP ${res.status} at ${url}`);
+
+    const still = await this.readInterestStatus(domain, id);
+    if (still) throw new WriteRejectedError(`unmark did not take effect: subject ${id} is still marked "${still}"`);
 
     const ownUid = this.cookies.getOwnUid();
     if (ownUid) this.opts.cache.invalidate(`html:getUserCollections:${ownUid}:${category}`);
