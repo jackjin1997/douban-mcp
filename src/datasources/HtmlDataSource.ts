@@ -223,7 +223,7 @@ export class HtmlDataSource implements IDoubanDataSource {
    * sec.douban.com redirect or a bare 401/403, which the old `status < 400`
    * check happily reported as success.
    */
-  private assertWriteAccepted(res: AxiosResponse, domain: string, url: string): void {
+  private assertWriteAccepted(res: AxiosResponse, domain: string, url: string, htmlOkPath?: string): void {
     const finalUrl: string = (res.request as { res?: { responseUrl?: string } })?.res?.responseUrl ?? url;
     const blockedByRiskControl = (why: string): never => {
       this.opts.rateLimiter.markCooldown(domain);
@@ -247,6 +247,11 @@ export class HtmlDataSource implements IDoubanDataSource {
       if (/accounts\.douban\.com|\/accounts\/login/.test(finalUrl)) {
         throw new AuthError(`write redirected to login page (${finalUrl}); cookie likely expired`);
       }
+      // Web form endpoints (unlike the /j/ JSON APIs) answer a successful POST
+      // with a 302 back to the subject page — landing there with <400 is the
+      // success signal. Verified live 2026-11-17: /subject/{id}/remove exists
+      // on both movie (302 risk-check when anonymous) and book (403) domains.
+      if (htmlOkPath && res.status < 400 && finalUrl.includes(htmlOkPath)) return;
       throw new ParseError(`write endpoint returned non-JSON body (HTTP ${res.status}) at ${finalUrl}`);
     }
 
@@ -314,11 +319,16 @@ export class HtmlDataSource implements IDoubanDataSource {
     const params = new URLSearchParams();
     params.set('ck', ck);
 
-    const url = `https://${domain}/j/subject/${id}/remove`;
+    // Douban has no /j/ JSON remove endpoint — /j/subject/{id}/remove answers
+    // 404 {"r":1,"code":404} for every subject (verified live 2026-11-17).
+    // The working endpoint is the page-level form POST /subject/{id}/remove,
+    // same as DouBanSync and MoviePilot's douban plugin use.
+    const url = `https://${domain}/subject/${id}/remove`;
     const res = await this.http.post(url, params, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Referer': `https://${domain}/subject/${id}/`,
+        'Origin': `https://${domain}`,
         'Cookie': this.cookies.toHeader(),
       },
     }).catch((e: unknown) => {
@@ -326,7 +336,7 @@ export class HtmlDataSource implements IDoubanDataSource {
       throw new NetworkError(msg);
     });
 
-    this.assertWriteAccepted(res, domain, url);
+    this.assertWriteAccepted(res, domain, url, `/subject/${id}`);
 
     const ownUid = this.cookies.getOwnUid();
     if (ownUid) this.opts.cache.invalidate(`html:getUserCollections:${ownUid}:${category}`);

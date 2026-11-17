@@ -153,13 +153,40 @@ describe('HtmlDataSource.markSubject', () => {
 describe('HtmlDataSource.unmarkSubject', () => {
   beforeEach(() => mockedAxios.post.mockReset());
 
-  it('POSTs to /remove endpoint', async () => {
+  it('POSTs to the page-level /subject/{id}/remove endpoint (no /j/ prefix)', async () => {
     mockedAxios.post.mockResolvedValue({ status: 200, data: { r: 0 } });
     const ds = makeDS('bid=x; dbcl2="1:y"; ck=CSRF');
     await ds.unmarkSubject('movie', '1234');
-    const [url, body] = (mockedAxios.post as jest.Mock).mock.calls.at(-1)!;
-    expect(url).toContain('/1234/remove');
+    const [url, body, cfg] = (mockedAxios.post as jest.Mock).mock.calls.at(-1)!;
+    expect(url).toBe('https://movie.douban.com/subject/1234/remove');
     expect((body as URLSearchParams).toString()).toContain('ck=CSRF');
+    expect(cfg.headers['Origin']).toBe('https://movie.douban.com');
+  });
+
+  it('uses book.douban.com for the book category', async () => {
+    mockedAxios.post.mockResolvedValue({ status: 200, data: { r: 0 } });
+    const ds = makeDS('bid=x; dbcl2="1:y"; ck=CSRF');
+    await ds.unmarkSubject('book', '999');
+    const [url] = (mockedAxios.post as jest.Mock).mock.calls.at(-1)!;
+    expect(url).toBe('https://book.douban.com/subject/999/remove');
+  });
+
+  it('accepts the form-endpoint success signal: HTML body + redirect back to the subject page', async () => {
+    mockedAxios.post.mockResolvedValue({
+      status: 200,
+      data: '<html><body>subject page</body></html>',
+      request: { res: { responseUrl: 'https://movie.douban.com/subject/1234/' } },
+    });
+    await expect(makeDS('bid=x; dbcl2="1:y"; ck=CSRF').unmarkSubject('movie', '1234')).resolves.toBeUndefined();
+  });
+
+  it('HTML landing somewhere else is ParseError, not success', async () => {
+    mockedAxios.post.mockResolvedValue({
+      status: 200,
+      data: '<html><body>homepage</body></html>',
+      request: { res: { responseUrl: 'https://www.douban.com/?utm=removed' } },
+    });
+    await expect(makeDS('bid=x; dbcl2="1:y"; ck=CSRF').unmarkSubject('movie', '1234')).rejects.toBeInstanceOf(ParseError);
   });
 
   it('200 + risk-control HTML is RateLimitError, not success', async () => {
